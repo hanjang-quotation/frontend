@@ -50,7 +50,7 @@ export const eventSampleForm: DocumentForm = {
       name: "출장비",
       description: "",
       quantity: "1",
-      unit: "식",
+      unit: "명",
       unitPrice: "200,000",
     },
   ],
