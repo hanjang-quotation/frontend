@@ -16,6 +16,7 @@ import {
   type DocumentForm,
   type LineForm,
 } from "@/lib/document/form";
+import { formatPhone } from "@/lib/format";
 import type { Preset } from "@/lib/preset/types";
 
 // 견적서 작성·수정 화면 (TECH_SPEC 10.1).
@@ -196,22 +197,31 @@ export default function DocumentEditor({
                   onChange={(e) =>
                     changeClient({ contactName: e.target.value })
                   }
+                  placeholder="예: 홍길동"
                 />
               </Field>
               <Field label="연락처">
+                {/* 숫자만 입력해도 하이픈을 넣어 준다. 이 형식 그대로 저장된다 */}
                 <input
                   className={input}
+                  type="tel"
                   inputMode="tel"
+                  autoComplete="tel"
                   value={form.client.phone}
-                  onChange={(e) => changeClient({ phone: e.target.value })}
+                  onChange={(e) =>
+                    changeClient({ phone: formatPhone(e.target.value) })
+                  }
+                  placeholder="예: 01012345678"
                 />
               </Field>
               <Field label="이메일">
                 <input
                   className={input}
                   type="email"
+                  autoComplete="email"
                   value={form.client.email}
                   onChange={(e) => changeClient({ email: e.target.value })}
+                  placeholder="예: contact@company.com"
                 />
               </Field>
             </div>
