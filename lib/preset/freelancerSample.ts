@@ -32,7 +32,7 @@ export const freelancerSampleForm: DocumentForm = {
       name: "메인 페이지 디자인",
       description: "PC·모바일",
       quantity: "1",
-      unit: "식",
+      unit: "페이지",
       unitPrice: "800,000",
     },
     {
