@@ -309,18 +309,11 @@ export default function DocumentEditor({
                           changeLine(line.id, { quantity: e.target.value })
                         }
                       />
-                      <select
-                        className={input}
-                        aria-label="단위"
+                      <UnitSelect
+                        options={unitOptions}
                         value={line.unit}
-                        onChange={(e) =>
-                          changeLine(line.id, { unit: e.target.value })
-                        }
-                      >
-                        {unitOptions.map((u) => (
-                          <option key={u}>{u}</option>
-                        ))}
-                      </select>
+                        onChange={(unit) => changeLine(line.id, { unit })}
+                      />
                       <input
                         className={`${input} text-right`}
                         aria-label="단가"
@@ -334,6 +327,19 @@ export default function DocumentEditor({
                         placeholder="단가"
                       />
                     </div>
+                    {isCustomUnit(unitOptions, line.unit) && (
+                      <input
+                        className={input}
+                        aria-label="단위 직접 입력"
+                        maxLength={20}
+                        value={line.unit}
+                        onChange={(e) =>
+                          changeLine(line.id, { unit: e.target.value })
+                        }
+                        placeholder="단위 직접 입력 (예: 컷, 개, 회)"
+                        autoFocus={line.unit === ""}
+                      />
+                    )}
                     <p className="text-right text-sm tabular-nums text-slate-700">
                       금액 {formatWon(totals.lineAmounts[i])}
                     </p>
@@ -472,6 +478,44 @@ function saveError(e: unknown): SaveState {
     kind: "error",
     messages: ["저장하지 못했습니다. 잠시 후 다시 시도해 주세요."],
   };
+}
+
+/** 단위 목록에 없는 값(빈 값 포함)이면 사용자가 직접 입력하는 중이다 */
+function isCustomUnit(options: string[], unit: string): boolean {
+  return !options.includes(unit);
+}
+
+const CUSTOM_UNIT = "__custom__";
+
+/**
+ * 업종 설정의 단위 목록 + "직접 입력". 직접 입력을 고르면 단위를 비우고,
+ * 그 아래에 나오는 입력란에 적은 값이 그대로 단위가 된다.
+ */
+function UnitSelect({
+  options,
+  value,
+  onChange,
+}: {
+  options: string[];
+  value: string;
+  onChange: (unit: string) => void;
+}) {
+  const custom = isCustomUnit(options, value);
+  return (
+    <select
+      className={input}
+      aria-label="단위"
+      value={custom ? CUSTOM_UNIT : value}
+      onChange={(e) =>
+        onChange(e.target.value === CUSTOM_UNIT ? "" : e.target.value)
+      }
+    >
+      {options.map((u) => (
+        <option key={u}>{u}</option>
+      ))}
+      <option value={CUSTOM_UNIT}>직접 입력</option>
+    </select>
+  );
 }
 
 function Section({
