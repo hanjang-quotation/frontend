@@ -468,24 +468,16 @@ export default function DocumentEditor({
 
         <div className={`${tab === "preview" ? "" : "hidden"} lg:block`}>
           <div className="lg:sticky lg:top-4">
-            <DocumentPreview
-              preset={preset}
-              form={form}
-              totals={totals}
-              docNo={docNo}
-            />
-
-            {/* 문서 작업: PDF 내려받기. 엑셀 내려받기·문서 변환(2차)도 여기에 둔다 */}
-            <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-              <h2 className="text-sm font-semibold text-slate-900">
-                문서 작업
-              </h2>
+            {/* 문서 작업 막대: PDF 내려받기. 엑셀 내려받기·문서 변환(2차)도 여기에 둔다.
+                미리보기 위에 두어 스크롤하지 않아도 보이게 한다 */}
+            <div className="mb-2 flex min-h-9 flex-wrap items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-slate-900">미리보기</h2>
               {documentId === undefined ? (
-                <p className="mt-2 text-sm text-slate-500">
+                <p className="text-sm text-slate-500">
                   저장하면 PDF로 내려받을 수 있습니다.
                 </p>
               ) : (
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   {/* PDF 는 서버에 저장된 내용으로 만들어지므로, 저장하지 않은 수정이 있으면 막는다 */}
                   <a
                     href={`/api/documents/${documentId}/pdf`}
@@ -500,13 +492,20 @@ export default function DocumentEditor({
                       });
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
                   >
                     PDF 내려받기
                   </a>
                 </div>
               )}
-            </section>
+            </div>
+
+            <DocumentPreview
+              preset={preset}
+              form={form}
+              totals={totals}
+              docNo={docNo}
+            />
           </div>
         </div>
       </div>
