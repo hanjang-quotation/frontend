@@ -22,7 +22,8 @@ http://localhost:3000 에서 확인한다.
 | 경로 | 내용 |
 |---|---|
 | `app/(marketing)` | 메인(업종 카드), 업종 소개 페이지 |
-| `app/(app)` | 문서 목록, 작성·수정(`documents/DocumentEditor.tsx`, `new`, `[id]`), 설정 |
+| `app/(app)/(wide)` | 견적서 작성·수정 (넓은 폭): `documents/DocumentEditor.tsx`, `new`, `[id]` |
+| `app/(app)/(standard)` | 내 문서 목록, 내 정보·거래처 설정 (보통 폭) |
 | `app/login` | 소셜 로그인 버튼 |
 | `components` | 공통 화면 조각 |
 | `components/document` | 견적서 미리보기 |

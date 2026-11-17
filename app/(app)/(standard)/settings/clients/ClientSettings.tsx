@@ -103,7 +103,7 @@ export default function ClientSettings() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div className="mx-auto max-w-3xl">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-slate-900">거래처</h1>

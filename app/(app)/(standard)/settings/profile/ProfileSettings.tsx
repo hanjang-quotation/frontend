@@ -129,7 +129,7 @@ export default function ProfileSettings() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div className="mx-auto max-w-3xl">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-slate-900">내 정보</h1>
