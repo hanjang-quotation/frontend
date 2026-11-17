@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AuthMenu from "@/components/AuthMenu";
 
 export default function SiteHeader() {
   return (
@@ -11,12 +12,7 @@ export default function SiteHeader() {
           <Link href="/documents" className="hover:text-slate-900">
             내 문서
           </Link>
-          <Link
-            href="/login"
-            className="rounded-md border border-slate-300 px-3 py-1.5 hover:bg-slate-50"
-          >
-            로그인
-          </Link>
+          <AuthMenu />
         </nav>
       </div>
     </header>

@@ -19,6 +19,26 @@ export class ApiError extends Error {
   }
 }
 
+/** GET /api/me 응답. email·name 은 소셜 서비스가 주지 않으면 비어 있다. */
+export interface Me {
+  id: number;
+  email: string | null;
+  name: string | null;
+  provider: "KAKAO" | "GOOGLE";
+  plan: string;
+}
+
+// 백엔드가 내려 준 CSRF 토큰 쿠키. 값을 바꾸는 요청에 X-XSRF-TOKEN 헤더로 돌려보낸다 (TECH_SPEC 11장)
+function readCsrfToken(): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  const cookie = document.cookie
+    .split("; ")
+    .find((c) => c.startsWith("XSRF-TOKEN="));
+  return cookie
+    ? decodeURIComponent(cookie.slice("XSRF-TOKEN=".length))
+    : undefined;
+}
+
 export async function apiFetch<T>(
   path: string,
   init: RequestInit = {},
@@ -26,6 +46,11 @@ export async function apiFetch<T>(
   const headers = new Headers(init.headers);
   if (init.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
+  }
+  const method = (init.method ?? "GET").toUpperCase();
+  if (method !== "GET" && method !== "HEAD") {
+    const token = readCsrfToken();
+    if (token) headers.set("X-XSRF-TOKEN", token);
   }
 
   const res = await fetch(`/api${path}`, {
@@ -55,4 +80,15 @@ export const api = {
   health: () => apiFetch<{ status: string }>("/health"),
   presets: () => apiFetch<PresetSummary[]>("/presets"),
   preset: (code: string) => apiFetch<Preset>(`/presets/${code}`),
+
+  /** 로그인하지 않았으면 null */
+  me: async (): Promise<Me | null> => {
+    try {
+      return await apiFetch<Me>("/me");
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) return null;
+      throw e;
+    }
+  },
+  logout: () => apiFetch<void>("/logout", { method: "POST" }),
 };

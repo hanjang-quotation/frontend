@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
+import LoginError from "./LoginError";
 
 export const metadata: Metadata = { title: "로그인" };
 
 // 로그인 버튼은 백엔드의 소셜 로그인 시작 주소로 이동한다.
 // 페이지 이동이 필요하므로 <Link> 가 아니라 <a> 를 쓴다.
-// 백엔드 쪽 처리는 1단계(소셜 로그인)에서 만든다.
+// 로그인에 성공하면 백엔드가 메인(/)으로 돌려보낸다.
 export default function LoginPage() {
   return (
     <main className="flex flex-1 items-center justify-center px-4">
@@ -14,6 +16,10 @@ export default function LoginPage() {
         <p className="mt-2 text-sm text-slate-500">
           비밀번호 없이 소셜 계정으로 시작하세요.
         </p>
+        {/* 주소의 ?error 를 읽으므로 Suspense 로 감싼다 (Next 16 cacheComponents) */}
+        <Suspense>
+          <LoginError />
+        </Suspense>
         <div className="mt-6 space-y-3">
           <a
             href="/api/oauth2/authorization/kakao"
