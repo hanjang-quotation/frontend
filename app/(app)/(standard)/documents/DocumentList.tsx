@@ -68,16 +68,16 @@ export default function DocumentList() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-900">내 문서</h1>
+        <h1 className="text-xl font-bold text-ink">내 문서</h1>
         <Link
           href="/documents/new?preset=freelancer"
-          className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="rounded-md bg-pen px-3 py-2 text-sm font-medium text-white hover:bg-pen-deep"
         >
           새 견적서
         </Link>
       </div>
 
-      <div className="mt-5 flex gap-1 overflow-x-auto border-b border-slate-200 text-sm">
+      <div className="mt-5 flex gap-1 overflow-x-auto border-b border-rule text-sm">
         {TABS.map((tab) => (
           <button
             key={tab.label}
@@ -85,8 +85,8 @@ export default function DocumentList() {
             onClick={() => selectTab(tab.status)}
             className={`shrink-0 border-b-2 px-3 py-2 ${
               status === tab.status
-                ? "border-blue-600 font-medium text-blue-700"
-                : "border-transparent text-slate-500 hover:text-slate-900"
+                ? "border-pen font-medium text-pen"
+                : "border-transparent text-slate-500 hover:text-ink"
             }`}
           >
             {tab.label}
@@ -104,7 +104,7 @@ export default function DocumentList() {
           {state.needLogin && (
             <Link
               href="/login"
-              className="mt-3 inline-block text-blue-600 underline"
+              className="mt-3 inline-block text-pen underline"
             >
               로그인하러 가기
             </Link>
@@ -122,7 +122,7 @@ export default function DocumentList() {
 
       {state.kind === "loaded" && state.data.items.length > 0 && (
         <>
-          <ul className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+          <ul className="mt-4 divide-y divide-slate-100 rounded-xl border border-rule bg-paper">
             {state.data.items.map((doc) => (
               <li key={doc.id}>
                 <Link
@@ -130,9 +130,7 @@ export default function DocumentList() {
                   className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-slate-50"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-slate-900">
-                      {doc.title}
-                    </p>
+                    <p className="truncate font-medium text-ink">{doc.title}</p>
                     <p className="text-xs text-slate-500">
                       <span className="tabular-nums">{doc.docNo}</span>
                       {doc.clientName && <> · {doc.clientName}</>}
@@ -144,7 +142,7 @@ export default function DocumentList() {
                     {STATUS_LABELS[doc.status]}
                   </span>
                   <div className="w-32 text-right">
-                    <p className="font-medium tabular-nums text-slate-900">
+                    <p className="font-medium tabular-nums text-ink">
                       {formatWon(doc.totalAmount)}
                     </p>
                     <p className="text-xs text-slate-400">

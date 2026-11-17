@@ -46,7 +46,7 @@ export function SupplierSection({
       action={
         <Link
           href="/settings/profile"
-          className="text-xs text-slate-500 hover:text-slate-900"
+          className="text-xs text-slate-500 hover:text-ink"
         >
           내 정보 관리
         </Link>
@@ -59,7 +59,7 @@ export function SupplierSection({
           등록한 내 정보가 없습니다.{" "}
           <Link
             href="/settings/profile"
-            className="font-medium text-blue-600 underline"
+            className="font-medium text-pen underline"
           >
             내 정보 등록하기
           </Link>
@@ -172,7 +172,7 @@ export function ClientSection({
       action={
         <Link
           href="/settings/clients"
-          className="text-xs text-slate-500 hover:text-slate-900"
+          className="text-xs text-slate-500 hover:text-ink"
         >
           거래처 관리
         </Link>
@@ -264,7 +264,7 @@ export function ClientSection({
             : client.name.trim()
               ? "직접 입력한 거래처입니다."
               : ""}
-          {message && <span className="ml-1 text-blue-700">{message}</span>}
+          {message && <span className="ml-1 text-pen">{message}</span>}
         </span>
         {!guest && !picked && client.name.trim() !== "" && (
           <button

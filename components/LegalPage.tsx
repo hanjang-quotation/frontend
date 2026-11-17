@@ -12,7 +12,7 @@ export function LegalPage({
 }) {
   return (
     <article className="mx-auto max-w-3xl px-4 py-12 text-sm leading-relaxed text-slate-700">
-      <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
+      <h1 className="font-display text-3xl font-bold text-ink">{title}</h1>
       <p className="mt-1 text-xs text-slate-500">시행일 {effectiveDate}</p>
       <div className="mt-8 space-y-8">{children}</div>
     </article>
@@ -28,7 +28,7 @@ export function Article({
 }) {
   return (
     <section>
-      <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+      <h2 className="text-base font-semibold text-ink">{title}</h2>
       <div className="mt-2 space-y-2 [&_li]:ml-5 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ul]:list-disc [&_ul]:space-y-1">
         {children}
       </div>
@@ -52,7 +52,7 @@ export function LegalTable({
             {head.map((h) => (
               <th
                 key={h}
-                className="border border-slate-200 bg-slate-50 p-2 text-left font-medium text-slate-700"
+                className="border border-rule bg-slate-50 p-2 text-left font-medium text-slate-700"
               >
                 {h}
               </th>
@@ -63,7 +63,7 @@ export function LegalTable({
           {rows.map((row, i) => (
             <tr key={i}>
               {row.map((cell, j) => (
-                <td key={j} className="border border-slate-200 p-2 align-top">
+                <td key={j} className="border border-rule p-2 align-top">
                   {cell}
                 </td>
               ))}

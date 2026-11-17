@@ -44,13 +44,13 @@ export default function WelcomeConsent() {
 
   return (
     <div className="mx-auto max-w-xl px-4 py-12">
-      <h1 className="text-2xl font-bold text-slate-900">반갑습니다</h1>
+      <h1 className="font-display text-3xl font-bold text-ink">반갑습니다</h1>
       <p className="mt-2 text-sm text-slate-600">
         서비스를 쓰려면 아래 두 가지에 동의해 주세요.
       </p>
 
-      <div className="mt-6 space-y-4 rounded-xl border border-slate-200 bg-white p-5 text-sm">
-        <label className="flex items-center gap-2 border-b border-slate-100 pb-3 font-semibold text-slate-900">
+      <div className="mt-6 space-y-4 rounded-xl border border-rule bg-paper p-5 text-sm">
+        <label className="flex items-center gap-2 border-b border-slate-100 pb-3 font-semibold text-ink">
           <input
             type="checkbox"
             className="h-4 w-4"
@@ -64,7 +64,7 @@ export default function WelcomeConsent() {
         </label>
 
         <div>
-          <label className="flex items-center gap-2 text-slate-900">
+          <label className="flex items-center gap-2 text-ink">
             <input
               type="checkbox"
               className="h-4 w-4"
@@ -83,7 +83,7 @@ export default function WelcomeConsent() {
         </div>
 
         <div>
-          <label className="flex items-center gap-2 text-slate-900">
+          <label className="flex items-center gap-2 text-ink">
             <input
               type="checkbox"
               className="h-4 w-4"
@@ -100,7 +100,7 @@ export default function WelcomeConsent() {
             </Link>
           </label>
           <table className="mt-2 w-full text-xs text-slate-600">
-            <tbody className="[&_td]:border [&_td]:border-slate-200 [&_td]:p-2 [&_th]:border [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:p-2 [&_th]:text-left [&_th]:font-medium">
+            <tbody className="[&_td]:border [&_td]:border-rule [&_td]:p-2 [&_th]:border [&_th]:border-rule [&_th]:bg-slate-50 [&_th]:p-2 [&_th]:text-left [&_th]:font-medium">
               <tr>
                 <th className="w-24">수집 항목</th>
                 <td>
@@ -141,7 +141,7 @@ export default function WelcomeConsent() {
           type="button"
           disabled={!all || busy}
           onClick={agree}
-          className="flex-1 rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="flex-1 rounded-md bg-pen px-4 py-2.5 text-sm font-medium text-white hover:bg-pen-deep disabled:opacity-50"
         >
           {busy ? "저장 중…" : "동의하고 시작하기"}
         </button>

@@ -134,7 +134,7 @@ export default function ProfileSettings() {
     <div className="mx-auto max-w-3xl">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">내 정보</h1>
+          <h1 className="text-xl font-bold text-ink">내 정보</h1>
           <p className="mt-0.5 text-sm text-slate-500">
             견적서의 공급자 칸에 들어갑니다. 기본 내 정보가 새 견적서에 먼저
             골라집니다.
@@ -144,7 +144,7 @@ export default function ProfileSettings() {
           <button
             type="button"
             onClick={() => setEditing({ values: EMPTY })}
-            className="shrink-0 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="shrink-0 rounded-md bg-pen px-3 py-2 text-sm font-medium text-white hover:bg-pen-deep"
           >
             + 내 정보 추가
           </button>
@@ -171,7 +171,7 @@ export default function ProfileSettings() {
           {list.needLogin && (
             <Link
               href="/login"
-              className="mt-3 inline-block text-blue-600 underline"
+              className="mt-3 inline-block text-pen underline"
             >
               로그인하러 가기
             </Link>
@@ -209,14 +209,14 @@ export default function ProfileSettings() {
             return (
               <li
                 key={p.id}
-                className="rounded-xl border border-slate-200 bg-white p-4"
+                className="rounded-xl border border-rule bg-paper p-4"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-semibold text-slate-900">
+                    <p className="font-semibold text-ink">
                       {p.name}
                       {p.isDefault && (
-                        <span className="ml-2 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                        <span className="ml-2 rounded-full bg-pen-soft px-2 py-0.5 text-xs font-medium text-pen">
                           기본
                         </span>
                       )}
@@ -303,7 +303,7 @@ function Withdraw() {
   }
 
   return (
-    <section className="mt-16 border-t border-slate-200 pt-6 text-sm">
+    <section className="mt-16 border-t border-rule pt-6 text-sm">
       {!open ? (
         <button
           type="button"
@@ -347,7 +347,7 @@ function Withdraw() {
                 setConfirmText("");
                 setError(null);
               }}
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50"
+              className="rounded-md border border-slate-300 bg-paper px-3 py-2 hover:bg-slate-50"
             >
               취소
             </button>
@@ -376,13 +376,13 @@ function ProfileForm({
   const set = (patch: Partial<ProfileValues>) => onChange({ ...v, ...patch });
   return (
     <form
-      className="mt-6 space-y-4 rounded-xl border border-blue-200 bg-white p-5"
+      className="mt-6 space-y-4 rounded-xl border border-pen/30 bg-paper p-5"
       onSubmit={(e) => {
         e.preventDefault();
         onSave();
       }}
     >
-      <h2 className="text-sm font-semibold text-slate-900">
+      <h2 className="text-sm font-semibold text-ink">
         {isNew ? "내 정보 추가" : "내 정보 수정"}
       </h2>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -499,7 +499,7 @@ function ProfileForm({
         <button
           type="submit"
           disabled={busy}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+          className="rounded-md bg-pen px-4 py-2 text-sm font-medium text-white hover:bg-pen-deep disabled:opacity-60"
         >
           {busy ? "저장 중…" : "저장"}
         </button>

@@ -41,7 +41,7 @@ export default function StatusSelect({
     <label className="flex items-center gap-2 text-sm">
       <span className="text-slate-600">상태</span>
       <select
-        className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none disabled:opacity-60"
+        className="rounded-md border border-slate-300 bg-paper px-2 py-1.5 text-sm focus:border-pen focus:outline-none disabled:opacity-60"
         value={status}
         disabled={pending}
         onChange={(e) => change(e.target.value as DocumentStatus)}

@@ -33,9 +33,9 @@ export default function DocumentPreview({
     .filter(({ line }) => line.name.trim() !== "" || line.unitPrice !== "");
 
   return (
-    <article className="rounded-xl border border-slate-200 bg-white p-6 text-[13px] leading-relaxed text-slate-800 shadow-sm sm:p-8">
+    <article className="rounded-xl border border-rule bg-paper p-6 text-[13px] leading-relaxed text-slate-800 shadow-sm sm:p-8">
       <header className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-slate-800 pb-4">
-        <h2 className="text-2xl font-bold tracking-[0.3em] text-slate-900">
+        <h2 className="text-2xl font-bold tracking-[0.3em] text-ink">
           {heading}
         </h2>
         <dl className="grid grid-cols-[auto_auto] gap-x-3 text-xs text-slate-600">
@@ -63,7 +63,7 @@ export default function DocumentPreview({
       <section className="mt-5 grid gap-4 sm:grid-cols-2">
         <div>
           <h3 className="text-xs font-semibold text-slate-500">받는 분</h3>
-          <p className="mt-1 text-base font-semibold text-slate-900">
+          <p className="mt-1 text-base font-semibold text-ink">
             {receiver.name ? `${receiver.name} 귀하` : "거래처 이름"}
           </p>
           {receiver.details && (
@@ -74,7 +74,7 @@ export default function DocumentPreview({
           <h3 className="text-xs font-semibold text-slate-500">공급자</h3>
           {supplier.name ? (
             <>
-              <p className="mt-1 text-base font-semibold text-slate-900">
+              <p className="mt-1 text-base font-semibold text-ink">
                 {supplier.name}
               </p>
               {supplier.details && (
@@ -95,11 +95,11 @@ export default function DocumentPreview({
       <section className="mt-5 rounded-lg bg-slate-50 px-4 py-3">
         <p className="text-slate-600">
           건명{" "}
-          <span className="font-semibold text-slate-900">
+          <span className="font-semibold text-ink">
             {form.title.trim() || "-"}
           </span>
         </p>
-        <p className="mt-1 text-lg font-bold text-slate-900 tabular-nums">
+        <p className="mt-1 text-lg font-bold text-ink tabular-nums">
           {taxMode === "WITHHOLDING_3_3" ? "청구 금액" : "합계 금액"}{" "}
           {formatWon(totals.totalAmount)}
           {taxMode === "VAT_10" && (
@@ -134,7 +134,7 @@ export default function DocumentPreview({
             <tr key={line.id} className="border-b border-slate-100 align-top">
               <td className="py-2 text-center text-slate-500">{i + 1}</td>
               <td className="py-2">
-                <p className="text-slate-900">{line.name || "-"}</p>
+                <p className="text-ink">{line.name || "-"}</p>
                 {line.description.trim() && (
                   <p className="text-xs text-slate-500">{line.description}</p>
                 )}
@@ -179,7 +179,7 @@ export default function DocumentPreview({
             </div>
           </>
         )}
-        <div className="flex justify-between border-t border-slate-300 pt-1 font-semibold text-slate-900">
+        <div className="flex justify-between border-t border-slate-300 pt-1 font-semibold text-ink">
           <dt>{taxMode === "WITHHOLDING_3_3" ? "청구 금액" : "합계"}</dt>
           <dd>{formatWon(totals.totalAmount)}</dd>
         </div>
@@ -206,7 +206,7 @@ export default function DocumentPreview({
               return (
                 <div key={field.key} className="contents">
                   <dt className="text-slate-600">{field.label}</dt>
-                  <dd className="text-slate-900">
+                  <dd className="text-ink">
                     {field.type === "date" ? formatDate(value) : value}
                   </dd>
                 </div>

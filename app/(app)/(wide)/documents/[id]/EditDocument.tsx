@@ -51,7 +51,7 @@ export default function EditDocument({ id }: { id: string }) {
         <p>{state.message}</p>
         <Link
           href={state.needLogin ? "/login" : "/documents"}
-          className="mt-3 inline-block text-blue-600 underline"
+          className="mt-3 inline-block text-pen underline"
         >
           {state.needLogin ? "로그인하러 가기" : "내 문서로"}
         </Link>

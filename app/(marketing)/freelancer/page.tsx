@@ -34,8 +34,8 @@ export default function FreelancerLandingPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">
-      <p className="text-sm font-medium text-blue-600">프리랜서</p>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+      <p className="text-sm font-medium text-pen">프리랜서</p>
+      <h1 className="mt-2 font-display text-3xl font-bold text-ink sm:text-4xl">
         디자인·개발 외주 견적서, 5분이면 됩니다
       </h1>
       <p className="mt-4 text-slate-600">
@@ -46,7 +46,7 @@ export default function FreelancerLandingPage() {
       <div className="mt-8 flex flex-wrap items-center gap-3">
         <Link
           href="/documents/new?preset=freelancer"
-          className="inline-block rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
+          className="inline-block rounded-lg bg-pen px-5 py-3 font-medium text-white hover:bg-pen-deep"
         >
           가입 없이 바로 작성하기
         </Link>
@@ -56,7 +56,7 @@ export default function FreelancerLandingPage() {
       </div>
 
       <section className="mt-12">
-        <h2 className="font-semibold text-slate-900">이렇게 만들어집니다</h2>
+        <h2 className="font-semibold text-ink">이렇게 만들어집니다</h2>
         <p className="mt-1 text-sm text-slate-500">
           아래는 예시입니다. 작성 화면에서 입력하는 대로 이 모양이 바로 바뀌고,
           같은 모양으로 PDF를 내려받습니다.
@@ -76,16 +76,16 @@ export default function FreelancerLandingPage() {
         {points.map((p) => (
           <li
             key={p.title}
-            className="rounded-xl border border-slate-200 bg-white p-5"
+            className="rounded-xl border border-rule bg-paper p-5"
           >
-            <h2 className="font-semibold text-slate-900">{p.title}</h2>
+            <h2 className="font-semibold text-ink">{p.title}</h2>
             <p className="mt-1 text-sm text-slate-600">{p.body}</p>
           </li>
         ))}
       </ul>
 
       <section className="mt-12">
-        <h2 className="font-semibold text-slate-900">견적서에 들어가는 열</h2>
+        <h2 className="font-semibold text-ink">견적서에 들어가는 열</h2>
         <div className="mt-3 flex flex-wrap gap-2">
           {columnLabels.map((label) => (
             <span

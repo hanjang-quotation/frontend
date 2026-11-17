@@ -106,7 +106,7 @@ export default function ClientSettings() {
     <div className="mx-auto max-w-3xl">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">거래처</h1>
+          <h1 className="text-xl font-bold text-ink">거래처</h1>
           <p className="mt-0.5 text-sm text-slate-500">
             저장해 두면 견적서를 쓸 때 골라서 바로 채울 수 있습니다.
           </p>
@@ -118,7 +118,7 @@ export default function ClientSettings() {
               setError(null);
               setEditing({ values: EMPTY });
             }}
-            className="shrink-0 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="shrink-0 rounded-md bg-pen px-3 py-2 text-sm font-medium text-white hover:bg-pen-deep"
           >
             + 거래처 추가
           </button>
@@ -168,7 +168,7 @@ export default function ClientSettings() {
           />
           <button
             type="submit"
-            className="shrink-0 rounded-md border border-slate-300 bg-white px-3 text-sm hover:bg-slate-50"
+            className="shrink-0 rounded-md border border-slate-300 bg-paper px-3 text-sm hover:bg-slate-50"
           >
             찾기
           </button>
@@ -184,7 +184,7 @@ export default function ClientSettings() {
           {list.needLogin && (
             <Link
               href="/login"
-              className="mt-3 inline-block text-blue-600 underline"
+              className="mt-3 inline-block text-pen underline"
             >
               로그인하러 가기
             </Link>
@@ -201,7 +201,7 @@ export default function ClientSettings() {
       )}
 
       {list.kind === "loaded" && list.clients.length > 0 && (
-        <ul className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+        <ul className="mt-4 divide-y divide-slate-100 rounded-xl border border-rule bg-paper">
           {list.clients.map((c) => {
             const view = partyView(c);
             return (
@@ -210,7 +210,7 @@ export default function ClientSettings() {
                 className="flex flex-wrap items-start justify-between gap-3 px-4 py-3"
               >
                 <div className="min-w-0">
-                  <p className="font-medium text-slate-900">{c.name}</p>
+                  <p className="font-medium text-ink">{c.name}</p>
                   {view.details && (
                     <p className="text-sm text-slate-600">{view.details}</p>
                   )}
@@ -266,13 +266,13 @@ function ClientForm({
   const set = (patch: Partial<ClientValues>) => onChange({ ...v, ...patch });
   return (
     <form
-      className="mt-6 space-y-4 rounded-xl border border-blue-200 bg-white p-5"
+      className="mt-6 space-y-4 rounded-xl border border-pen/30 bg-paper p-5"
       onSubmit={(e) => {
         e.preventDefault();
         onSave();
       }}
     >
-      <h2 className="text-sm font-semibold text-slate-900">
+      <h2 className="text-sm font-semibold text-ink">
         {isNew ? "거래처 추가" : "거래처 수정"}
       </h2>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -354,7 +354,7 @@ function ClientForm({
         <button
           type="submit"
           disabled={busy}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+          className="rounded-md bg-pen px-4 py-2 text-sm font-medium text-white hover:bg-pen-deep disabled:opacity-60"
         >
           {busy ? "저장 중…" : "저장"}
         </button>

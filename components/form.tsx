@@ -1,7 +1,7 @@
 // 입력 화면 공통 부품. 작성 화면과 설정 화면(내 정보·거래처)이 같이 쓴다.
 
 export const inputClass =
-  "w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm focus:border-blue-500 focus:outline-none";
+  "w-full rounded-md border border-slate-300 bg-paper px-2.5 py-1.5 text-sm focus:border-pen focus:outline-none";
 
 const labelClass = "mb-1 block text-xs font-medium text-slate-600";
 
@@ -16,9 +16,9 @@ export function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className="rounded-xl border border-rule bg-paper p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+        <h2 className="text-sm font-semibold text-ink">{title}</h2>
         {action}
       </div>
       {children}

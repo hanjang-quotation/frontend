@@ -11,8 +11,8 @@ export const metadata: Metadata = { title: "로그인" };
 export default function LoginPage() {
   return (
     <main className="flex flex-1 items-center justify-center px-4">
-      <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 text-center">
-        <h1 className="text-xl font-bold text-slate-900">로그인</h1>
+      <div className="w-full max-w-sm rounded-xl border border-rule bg-paper p-8 text-center">
+        <h1 className="font-display text-2xl font-bold text-ink">로그인</h1>
         <p className="mt-2 text-sm text-slate-500">
           비밀번호 없이 소셜 계정으로 시작하세요.
         </p>

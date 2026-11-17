@@ -62,7 +62,7 @@ export default function AuthMenu() {
 
   return (
     <>
-      <span className="text-slate-900">{me.name ?? "회원"} 님</span>
+      <span className="text-ink">{me.name ?? "회원"} 님</span>
       <button
         type="button"
         onClick={logout}

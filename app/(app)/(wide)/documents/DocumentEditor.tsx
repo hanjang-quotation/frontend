@@ -223,7 +223,7 @@ export default function DocumentEditor({
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-slate-900">
+      <h1 className="text-xl font-bold text-ink">
         {documentId === undefined ? "새 견적서" : "견적서 수정"}
       </h1>
       <p className="mt-0.5 text-sm text-slate-500">
@@ -242,7 +242,7 @@ export default function DocumentEditor({
           type="button"
           onClick={handleSave}
           disabled={save.kind === "saving"}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+          className="rounded-md bg-pen px-4 py-2 text-sm font-medium text-white hover:bg-pen-deep disabled:opacity-60"
         >
           {save.kind === "saving" ? "저장 중…" : "저장"}
         </button>
@@ -251,7 +251,7 @@ export default function DocumentEditor({
       {showRestored && save.kind === "idle" && (
         <div
           role="status"
-          className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-md bg-blue-50 px-4 py-3 text-sm text-blue-800"
+          className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-md bg-pen-soft px-4 py-3 text-sm text-pen-deep"
         >
           <span>
             작성하던 견적서를 불러왔습니다. 확인하고 저장을 눌러 주세요.
@@ -316,7 +316,7 @@ export default function DocumentEditor({
             key={t}
             type="button"
             onClick={() => setTab(t)}
-            className={`rounded-md py-1.5 ${tab === t ? "bg-white font-medium text-slate-900 shadow-sm" : "text-slate-500"}`}
+            className={`rounded-md py-1.5 ${tab === t ? "bg-paper font-medium text-ink shadow-sm" : "text-slate-500"}`}
           >
             {t === "edit" ? "입력" : "미리보기"}
           </button>
@@ -381,10 +381,7 @@ export default function DocumentEditor({
           <Section title="품목">
             <ol className="space-y-3">
               {form.lines.map((line, i) => (
-                <li
-                  key={line.id}
-                  className="rounded-lg border border-slate-200 p-3"
-                >
+                <li key={line.id} className="rounded-lg border border-rule p-3">
                   <div className="flex items-center justify-between text-xs text-slate-500">
                     <span>{i + 1}번째 품목</span>
                     <span className="flex gap-1">
@@ -538,7 +535,7 @@ export default function DocumentEditor({
                 />
               </Field>
             </div>
-            <p className="mt-3 text-right text-base font-semibold tabular-nums text-slate-900">
+            <p className="mt-3 text-right text-base font-semibold tabular-nums text-ink">
               {form.taxMode === "WITHHOLDING_3_3" ? "청구 금액" : "합계"}{" "}
               {formatWon(totals.totalAmount)}
             </p>
@@ -565,7 +562,7 @@ export default function DocumentEditor({
             {/* 문서 작업 막대: PDF 내려받기. 엑셀 내려받기·문서 변환(2차)도 여기에 둔다.
                 미리보기 위에 두어 스크롤하지 않아도 보이게 한다 */}
             <div className="mb-2 flex min-h-9 flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold text-slate-900">미리보기</h2>
+              <h2 className="text-sm font-semibold text-ink">미리보기</h2>
               {documentId === undefined ? (
                 <p className="text-sm text-slate-500">
                   저장하면 PDF로 내려받을 수 있습니다.
@@ -587,7 +584,7 @@ export default function DocumentEditor({
                       });
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    className="rounded-md border border-slate-300 bg-paper px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
                   >
                     PDF 내려받기
                   </a>
@@ -739,7 +736,7 @@ function IconButton({
       title={text}
       disabled={disabled}
       onClick={onClick}
-      className="h-6 w-6 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent"
+      className="h-6 w-6 rounded text-slate-500 hover:bg-slate-100 hover:text-ink disabled:opacity-30 disabled:hover:bg-transparent"
     >
       {children}
     </button>
