@@ -8,6 +8,12 @@ import type {
   DocumentUpdateRequest,
   PageResponse,
 } from "@/lib/document/types";
+import type {
+  Client,
+  ClientRequest,
+  Profile,
+  ProfileRequest,
+} from "@/lib/party/types";
 import type { Preset, PresetSummary } from "@/lib/preset/types";
 
 /** 백엔드 오류 응답 형식 (TECH_SPEC 9장) */
@@ -99,6 +105,41 @@ export const api = {
     }
   },
   logout: () => apiFetch<void>("/logout", { method: "POST" }),
+
+  /** 내 정보. 기본이 맨 앞 */
+  profiles: {
+    list: () => apiFetch<Profile[]>("/profiles"),
+    create: (body: ProfileRequest) =>
+      apiFetch<Profile>("/profiles", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: ProfileRequest) =>
+      apiFetch<Profile>(`/profiles/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      apiFetch<void>(`/profiles/${id}`, { method: "DELETE" }),
+  },
+
+  /** 거래처. 상호 가나다순, q 로 상호 검색 */
+  clients: {
+    list: (q?: string) =>
+      apiFetch<Client[]>(`/clients${q ? `?q=${encodeURIComponent(q)}` : ""}`),
+    create: (body: ClientRequest) =>
+      apiFetch<Client>("/clients", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: ClientRequest) =>
+      apiFetch<Client>(`/clients/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      apiFetch<void>(`/clients/${id}`, { method: "DELETE" }),
+  },
 
   documents: {
     list: (params: { status?: DocumentStatus; page?: number } = {}) => {

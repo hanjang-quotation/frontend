@@ -3,7 +3,11 @@
 
 import { calculateTotals, type TaxMode, type Totals } from "@/lib/calc";
 import type { Preset } from "@/lib/preset/types";
-import type { DocumentResponse, DocumentUpdateRequest } from "./types";
+import type {
+  ClientInput,
+  DocumentResponse,
+  DocumentUpdateRequest,
+} from "./types";
 
 export interface LineForm {
   /** 화면에서 행을 구분하는 값. 서버에는 보내지 않는다 */
@@ -17,13 +21,32 @@ export interface LineForm {
 }
 
 export interface ClientForm {
+  /** 저장된 거래처를 골랐을 때만. 칸을 고치면 직접 입력으로 바뀌어 null 이 된다 */
+  id: number | null;
   name: string;
   contactName: string;
   phone: string;
   email: string;
+  businessNo: string;
+  address: string;
 }
 
+export const EMPTY_CLIENT: ClientForm = {
+  id: null,
+  name: "",
+  contactName: "",
+  phone: "",
+  email: "",
+  businessNo: "",
+  address: "",
+};
+
 export interface DocumentForm {
+  /**
+   * 공급자로 고른 내 정보. null 이면 고르지 않음(수정할 때는 기존 공급자 유지).
+   * undefined 는 새 문서에서 아직 정하지 않은 상태로, 내 정보 목록을 불러오면 기본 내 정보로 정한다
+   */
+  profileId?: number | null;
   title: string;
   /** YYYY-MM-DD */
   issueDate: string;
@@ -86,7 +109,7 @@ export function emptyForm(preset: Preset, today: string): DocumentForm {
     title: "",
     issueDate: today,
     validUntil: "",
-    client: { name: "", contactName: "", phone: "", email: "" },
+    client: EMPTY_CLIENT,
     terms,
     taxMode: preset.defaultTaxMode,
     discount: "",
@@ -105,14 +128,18 @@ export function formFromDocument(doc: DocumentResponse): DocumentForm {
       value === undefined || value === null ? "" : String(value);
   }
   return {
+    profileId: doc.profileId,
     title: doc.title,
     issueDate: doc.issueDate,
     validUntil: doc.validUntil ?? "",
     client: {
+      id: doc.clientId,
       name: client.name ?? "",
       contactName: client.contactName ?? "",
       phone: client.phone ?? "",
       email: client.email ?? "",
+      businessNo: client.businessNo ?? "",
+      address: client.address ?? "",
     },
     terms,
     taxMode: doc.taxMode,
@@ -143,24 +170,13 @@ export function toRequest(
     terms[field.key] = n ?? value;
   }
 
-  const c = form.client;
-  const hasClient = [c.name, c.contactName, c.phone, c.email].some(
-    (v) => v.trim() !== "",
-  );
-
   return {
+    profileId: form.profileId ?? null,
     title: form.title.trim(),
     issueDate: form.issueDate,
     validUntil: form.validUntil || null,
     taxMode: form.taxMode,
-    client: hasClient
-      ? {
-          name: c.name.trim(),
-          contactName: c.contactName.trim(),
-          phone: c.phone.trim(),
-          email: c.email.trim(),
-        }
-      : null,
+    client: clientRequest(form.client),
     terms,
     discountAmount: parseNumber(form.discount) ?? 0,
     notes: form.notes.trim() || null,
@@ -172,6 +188,20 @@ export function toRequest(
       unitPrice: parseNumber(line.unitPrice),
     })),
   };
+}
+
+/** 저장된 거래처면 id 만, 직접 입력이면 칸의 값을. 아무것도 없으면 null */
+function clientRequest(c: ClientForm): ClientInput | null {
+  if (c.id !== null) return { id: c.id };
+  const fields = {
+    name: c.name.trim(),
+    contactName: c.contactName.trim(),
+    phone: c.phone.trim(),
+    email: c.email.trim(),
+    businessNo: c.businessNo.trim(),
+    address: c.address.trim(),
+  };
+  return Object.values(fields).some((v) => v !== "") ? fields : null;
 }
 
 /** 미리보기용 합계. 저장할 때는 서버가 다시 계산한다 */

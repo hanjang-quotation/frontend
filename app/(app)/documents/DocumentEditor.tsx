@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import DocumentPreview from "@/components/document/DocumentPreview";
+import { Field, Section, inputClass as input } from "@/components/form";
 import { ApiError, api } from "@/lib/api/client";
 import { TAX_MODE_LABELS, formatWon, type TaxMode } from "@/lib/calc";
 import {
@@ -12,23 +13,24 @@ import {
   toRequest,
   unitOptionsOf,
   withCommas,
-  type ClientForm,
   type DocumentForm,
   type LineForm,
 } from "@/lib/document/form";
 import type { DocumentStatus } from "@/lib/document/types";
-import { formatPhone, formatTime } from "@/lib/format";
+import { formatTime } from "@/lib/format";
+import {
+  partyView,
+  type Client,
+  type PartyFields,
+  type Profile,
+} from "@/lib/party/types";
 import type { Preset } from "@/lib/preset/types";
+import { ClientSection, SupplierSection } from "./PartyFields";
 import StatusSelect from "./StatusSelect";
 
 // 견적서 작성·수정 화면 (TECH_SPEC 10.1).
 // PC 는 왼쪽 입력·오른쪽 미리보기, 모바일은 탭으로 전환한다.
-// 입력 순서: 거래처 → 건명·날짜 → 품목 → 조건 → 세금 방식과 합계 → 비고.
-// 내 정보(공급자)는 6단계에서 붙인다.
-
-const input =
-  "w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm focus:border-blue-500 focus:outline-none";
-const label = "mb-1 block text-xs font-medium text-slate-600";
+// 입력 순서: 내 정보 → 거래처 → 건명·날짜 → 품목 → 조건 → 세금 방식과 합계 → 비고.
 
 type SaveState =
   | { kind: "idle" }
@@ -43,9 +45,12 @@ export default function DocumentEditor({
   docNo,
   status,
   savedAt,
+  keptSupplier,
 }: {
   preset: Preset;
   initial: DocumentForm;
+  /** 저장된 문서의 공급자 스냅샷. 그 내 정보가 지워져 고를 수 없을 때 "유지"로 보여 준다 */
+  keptSupplier?: PartyFields | null;
   /** 저장된 문서를 고칠 때만. 없으면 새 문서 */
   documentId?: number;
   docNo?: string;
@@ -90,13 +95,34 @@ export default function DocumentEditor({
     };
   }, [initial]);
 
+  // 내 정보·거래처 목록. 화면이 다시 보일 때마다 새로 불러온다 (설정 화면에서 추가하고 돌아온 경우).
+  // 새 문서는 이때 기본 내 정보와 그 세금 방식을 고른다 (profileId 가 아직 undefined 일 때만)
+  const [profiles, setProfiles] = useState<Profile[] | null>(null);
+  const [clients, setClients] = useState<Client[] | null>(null);
+  useEffect(() => {
+    api.profiles.list().then(
+      (list) => {
+        setProfiles(list);
+        setForm((prev) => withDefaultSupplier(prev, list, preset));
+      },
+      () => setProfiles([]),
+    );
+    api.clients.list().then(setClients, () => setClients([]));
+  }, [preset]);
+
   const totals = formTotals(form);
   const unitOptions = unitOptionsOf(preset);
 
+  // 미리보기의 공급자: 고른 내 정보, 없으면 문서에 남아 있는 공급자
+  const selectedProfile = profiles?.find((p) => p.id === form.profileId);
+  const supplier = selectedProfile
+    ? partyView(selectedProfile)
+    : form.profileId === null
+      ? partyView(keptSupplier)
+      : partyView(null);
+
   const change = (patch: Partial<DocumentForm>) =>
     setForm((prev) => ({ ...prev, ...patch }));
-  const changeClient = (patch: Partial<ClientForm>) =>
-    setForm((prev) => ({ ...prev, client: { ...prev.client, ...patch } }));
   const changeTerm = (key: string, value: string) =>
     setForm((prev) => ({ ...prev, terms: { ...prev.terms, [key]: value } }));
   const changeLine = (id: number, patch: Partial<LineForm>) =>
@@ -233,52 +259,25 @@ export default function DocumentEditor({
       {/* 입력 5 : 미리보기 6. 미리보기를 조금 넓게 해서 실제 문서(A4)와 비슷하게 보이게 한다 */}
       <div className="mt-4 grid gap-6 lg:grid-cols-[5fr_6fr]">
         <div className={`space-y-5 ${tab === "edit" ? "" : "hidden"} lg:block`}>
-          <Section title="거래처">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="상호 또는 이름">
-                <input
-                  className={input}
-                  value={form.client.name}
-                  onChange={(e) => changeClient({ name: e.target.value })}
-                  placeholder="예: 가나다 주식회사"
-                />
-              </Field>
-              <Field label="담당자">
-                <input
-                  className={input}
-                  value={form.client.contactName}
-                  onChange={(e) =>
-                    changeClient({ contactName: e.target.value })
-                  }
-                  placeholder="예: 홍길동"
-                />
-              </Field>
-              <Field label="연락처">
-                {/* 숫자만 입력해도 하이픈을 넣어 준다. 이 형식 그대로 저장된다 */}
-                <input
-                  className={input}
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  value={form.client.phone}
-                  onChange={(e) =>
-                    changeClient({ phone: formatPhone(e.target.value) })
-                  }
-                  placeholder="예: 010-1234-5678"
-                />
-              </Field>
-              <Field label="이메일">
-                <input
-                  className={input}
-                  type="email"
-                  autoComplete="email"
-                  value={form.client.email}
-                  onChange={(e) => changeClient({ email: e.target.value })}
-                  placeholder="예: contact@company.com"
-                />
-              </Field>
-            </div>
-          </Section>
+          <SupplierSection
+            profiles={profiles}
+            profileId={form.profileId}
+            keptSupplier={keptSupplier ? partyView(keptSupplier) : null}
+            onChange={(profileId) => change({ profileId })}
+          />
+
+          <ClientSection
+            clients={clients}
+            client={form.client}
+            onChange={(client) => change({ client })}
+            onClientSaved={(saved) =>
+              setClients((prev) =>
+                [...(prev ?? []), saved].sort((a, b) =>
+                  a.name < b.name ? -1 : a.name > b.name ? 1 : a.id - b.id,
+                ),
+              )
+            }
+          />
 
           <Section title="건명·날짜">
             <Field label="건명">
@@ -532,12 +531,32 @@ export default function DocumentEditor({
               form={form}
               totals={totals}
               docNo={docNo}
+              supplier={supplier}
             />
           </div>
         </div>
       </div>
     </div>
   );
+}
+
+/**
+ * 새 문서(profileId 가 아직 undefined)에 기본 내 정보를 고르고, 그 기본 세금 방식이 이 업종에서 쓸 수 있으면 따른다.
+ * 이미 정해졌으면(고른 것이든 "선택 안 함"이든) 그대로 둔다.
+ */
+function withDefaultSupplier(
+  form: DocumentForm,
+  profiles: Profile[],
+  preset: Preset,
+): DocumentForm {
+  if (form.profileId !== undefined) return form;
+  const def = profiles.find((p) => p.isDefault);
+  return {
+    ...form,
+    profileId: def?.id ?? null,
+    taxMode:
+      def && preset.taxModes.includes(def.taxType) ? def.taxType : form.taxMode,
+  };
 }
 
 /** 저장 실패를 화면에 보여 줄 문장으로 바꾼다 */
@@ -630,36 +649,6 @@ function SelectWithCustom({
         />
       )}
     </div>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
-      <h2 className="mb-3 text-sm font-semibold text-slate-900">{title}</h2>
-      {children}
-    </section>
-  );
-}
-
-function Field({
-  label: text,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className={label}>{text}</span>
-      {children}
-    </label>
   );
 }
 

@@ -1,6 +1,7 @@
 import { formatWon, type Totals } from "@/lib/calc";
 import { formatDate } from "@/lib/format";
 import type { DocumentForm } from "@/lib/document/form";
+import { partyView, type PartyView } from "@/lib/party/types";
 import type { Preset } from "@/lib/preset/types";
 
 // 작성 화면 오른쪽의 실시간 미리보기. 입력값을 견적서 모양으로 그리기만 한다.
@@ -11,15 +12,19 @@ export default function DocumentPreview({
   form,
   totals,
   docNo,
+  supplier,
   heading = "견적서",
 }: {
   preset: Preset;
   form: DocumentForm;
   totals: Totals;
   docNo?: string;
+  /** 공급자 칸. 고른 내 정보 또는 문서에 남아 있는 공급자 */
+  supplier: PartyView;
   heading?: string;
 }) {
-  const { client, taxMode } = form;
+  const { taxMode } = form;
+  const receiver = partyView(form.client);
   const filledTerms = preset.termFields.filter(
     (field) => (form.terms[field.key] ?? "").trim() !== "",
   );
@@ -59,20 +64,31 @@ export default function DocumentPreview({
         <div>
           <h3 className="text-xs font-semibold text-slate-500">받는 분</h3>
           <p className="mt-1 text-base font-semibold text-slate-900">
-            {client.name.trim() ? `${client.name.trim()} 귀하` : "거래처 이름"}
+            {receiver.name ? `${receiver.name} 귀하` : "거래처 이름"}
           </p>
-          <p className="text-slate-600">
-            {[client.contactName, client.phone, client.email]
-              .map((v) => v.trim())
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
+          {receiver.details && (
+            <p className="text-slate-600">{receiver.details}</p>
+          )}
         </div>
         <div>
           <h3 className="text-xs font-semibold text-slate-500">공급자</h3>
-          <p className="mt-1 text-slate-400">
-            내 정보(상호·연락처·계좌)는 설정 화면이 준비되면 표시됩니다.
-          </p>
+          {supplier.name ? (
+            <>
+              <p className="mt-1 text-base font-semibold text-slate-900">
+                {supplier.name}
+              </p>
+              {supplier.details && (
+                <p className="text-slate-600">{supplier.details}</p>
+              )}
+              {supplier.bank && (
+                <p className="text-slate-600">입금 계좌 {supplier.bank}</p>
+              )}
+            </>
+          ) : (
+            <p className="mt-1 text-slate-400">
+              내 정보를 고르면 상호·연락처·입금 계좌가 들어갑니다.
+            </p>
+          )}
         </div>
       </section>
 

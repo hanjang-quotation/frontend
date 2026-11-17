@@ -94,6 +94,8 @@ export interface DocumentResponse {
   issueDate: string;
   validUntil: string | null;
   taxMode: TaxMode;
+  /** 공급자로 고른 내 정보. 지워졌으면 null (공급자 스냅샷은 남는다) */
+  profileId: number | null;
   clientId: number | null;
   /** 작성 시점의 업종 설정. 화면은 이 값으로 그린다 */
   presetSnapshot: Preset;

@@ -22,6 +22,14 @@ export function formatDateTimeShort(iso: string): string {
 
 // 아래는 입력란 자동 서식. 저장되는 값도 이 형식 그대로다.
 
+/** 사업자등록번호 10자리 → 123-45-67890. 숫자 외 문자는 버린다. 입력하는 도중에도 부를 수 있다 */
+export function formatBusinessNo(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 10);
+  if (d.length <= 3) return d;
+  if (d.length <= 5) return `${d.slice(0, 3)}-${d.slice(3)}`;
+  return `${d.slice(0, 3)}-${d.slice(3, 5)}-${d.slice(5)}`;
+}
+
 /**
  * 전화번호에 하이픈을 넣는다. 숫자 외 문자는 버린다. 입력하는 도중에도 부를 수 있다.
  * 02-123-4567, 02-1234-5678, 031-123-4567, 010-1234-5678, 1588-1234

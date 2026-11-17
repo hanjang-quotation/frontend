@@ -22,6 +22,18 @@ export default function SiteHeader({
           <Link href="/documents" className="hover:text-slate-900">
             내 문서
           </Link>
+          <Link
+            href="/settings/clients"
+            className="hidden hover:text-slate-900 sm:inline"
+          >
+            거래처
+          </Link>
+          <Link
+            href="/settings/profile"
+            className="hidden hover:text-slate-900 sm:inline"
+          >
+            내 정보
+          </Link>
           <AuthMenu />
         </nav>
       </div>
