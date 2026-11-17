@@ -1,10 +1,20 @@
 import Link from "next/link";
 import AuthMenu from "@/components/AuthMenu";
 
-export default function SiteHeader() {
+/**
+ * 사이트 맨 위 메뉴. 안쪽 폭은 그 아래 본문과 왼쪽·오른쪽 끝이 맞도록 레이아웃이 넘겨 준다.
+ * 기본값은 소개 화면(marketing)의 폭이다.
+ */
+export default function SiteHeader({
+  widthClass = "max-w-5xl",
+}: {
+  widthClass?: string;
+}) {
   return (
     <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+      <div
+        className={`mx-auto flex h-14 ${widthClass} items-center justify-between px-4`}
+      >
         <Link href="/" className="font-bold text-slate-900">
           견적서 만들기
         </Link>

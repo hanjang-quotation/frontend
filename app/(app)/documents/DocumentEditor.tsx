@@ -230,7 +230,8 @@ export default function DocumentEditor({
         ))}
       </div>
 
-      <div className="mt-4 grid gap-6 lg:grid-cols-2">
+      {/* 입력 5 : 미리보기 6. 미리보기를 조금 넓게 해서 실제 문서(A4)와 비슷하게 보이게 한다 */}
+      <div className="mt-4 grid gap-6 lg:grid-cols-[5fr_6fr]">
         <div className={`space-y-5 ${tab === "edit" ? "" : "hidden"} lg:block`}>
           <Section title="거래처">
             <div className="grid gap-3 sm:grid-cols-2">
