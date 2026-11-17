@@ -16,8 +16,10 @@ import {
   type DocumentForm,
   type LineForm,
 } from "@/lib/document/form";
+import type { DocumentStatus } from "@/lib/document/types";
 import { formatPhone, formatTime } from "@/lib/format";
 import type { Preset } from "@/lib/preset/types";
+import StatusSelect from "./StatusSelect";
 
 // 견적서 작성·수정 화면 (TECH_SPEC 10.1).
 // PC 는 왼쪽 입력·오른쪽 미리보기, 모바일은 탭으로 전환한다.
@@ -39,6 +41,7 @@ export default function DocumentEditor({
   initial,
   documentId,
   docNo,
+  status,
   savedAt,
 }: {
   preset: Preset;
@@ -46,6 +49,8 @@ export default function DocumentEditor({
   /** 저장된 문서를 고칠 때만. 없으면 새 문서 */
   documentId?: number;
   docNo?: string;
+  /** 저장된 문서의 상태. 있으면 상태 선택을 보여 준다 */
+  status?: DocumentStatus;
   /** 새 문서를 방금 저장하고 넘어왔을 때 그 시각. 저장 안내를 띄운 채로 시작한다 */
   savedAt?: string;
 }) {
@@ -129,7 +134,10 @@ export default function DocumentEditor({
             {docNo && <span className="ml-2 tabular-nums">{docNo}</span>}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {documentId !== undefined && status && (
+            <StatusSelect documentId={documentId} initialStatus={status} />
+          )}
           <Link
             href="/documents"
             className="text-sm text-slate-600 hover:text-slate-900"

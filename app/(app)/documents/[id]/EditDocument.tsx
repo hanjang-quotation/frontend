@@ -64,6 +64,7 @@ export default function EditDocument({ id }: { id: string }) {
       initial={formFromDocument(doc)}
       documentId={doc.id}
       docNo={doc.docNo}
+      status={doc.status}
       savedAt={justSaved ? formatTime(doc.updatedAt) : undefined}
     />
   );
