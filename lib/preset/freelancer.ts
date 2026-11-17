@@ -1,10 +1,11 @@
 import type { Preset } from "./types";
 
 // 로그인 전에도 작성 화면을 쓸 수 있도록 업종 설정을 프론트에도 둔다.
-// 백엔드의 최신 버전(V7__seed_event_preset.sql 의 freelancer v2)과 내용이 같아야 한다.
+// 백엔드의 최신 버전(V8__seed_construction_preset.sql 의 freelancer v3)과 내용이 같아야 한다.
 export const freelancerPreset: Preset = {
   code: "freelancer",
   name: "프리랜서 (디자인·개발)",
+  titlePlaceholder: "예: 회사 소개 홈페이지 제작",
   columns: [
     {
       key: "name",

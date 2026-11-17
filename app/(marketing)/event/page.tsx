@@ -62,7 +62,7 @@ export default function EventLandingPage() {
           <DocumentPreview
             preset={eventPreset}
             form={eventSampleForm}
-            totals={formTotals(eventSampleForm)}
+            totals={formTotals(eventSampleForm, eventPreset)}
             docNo="EST-2026-0001"
             supplier={eventSampleSupplier}
           />

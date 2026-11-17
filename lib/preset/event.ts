@@ -1,10 +1,11 @@
 import type { Preset } from "./types";
 
 // 행사·케이터링. 인원 × 1인 단가, 출장비·장비는 별도 줄. 사업자 거래가 많아 기본 세금은 부가세 별도.
-// 백엔드의 V7__seed_event_preset.sql (event v1)과 내용이 같아야 한다.
+// 백엔드의 V8__seed_construction_preset.sql (event v2)과 내용이 같아야 한다.
 export const eventPreset: Preset = {
   code: "event",
   name: "행사·케이터링",
+  titlePlaceholder: "예: 창립 10주년 기념 만찬",
   columns: [
     {
       key: "name",

@@ -65,7 +65,7 @@ export default function FreelancerLandingPage() {
           <DocumentPreview
             preset={freelancerPreset}
             form={freelancerSampleForm}
-            totals={formTotals(freelancerSampleForm)}
+            totals={formTotals(freelancerSampleForm, freelancerPreset)}
             docNo="EST-2026-0001"
             supplier={freelancerSampleSupplier}
           />

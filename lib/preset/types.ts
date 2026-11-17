@@ -15,6 +15,8 @@ export interface PresetColumn {
   formula?: string;
   /** 입력 칸의 예시 문구 */
   placeholder?: string;
+  /** "unitPrice" 면 단가를 나눠 받는 열. 단가 = 그 열들의 합 (예: 시공의 자재·노무 단가) */
+  partOf?: "unitPrice";
 }
 
 export interface PresetTermField {
@@ -34,8 +36,22 @@ export interface Preset {
   termFields: PresetTermField[];
   taxModes: TaxMode[];
   defaultTaxMode: TaxMode;
+  /** 품목을 묶음(예: 시공의 공종)으로 나눠 묶음마다 소계를 보여 준다 */
   useGroups: boolean;
+  /** 묶음 이름 (예: "공종") */
+  groupLabel?: string;
+  /** 묶음 이름 추천 목록 */
+  groupOptions?: string[];
+  /** 가산 항목. 소계 × 비율(%)을 공급 금액에 더한다 (예: 공과잡비·기업이윤) */
+  surcharges?: PresetSurcharge[];
+  /** 건명 입력 칸의 예시 */
+  titlePlaceholder?: string;
   printTemplate: string;
+}
+
+export interface PresetSurcharge {
+  key: string;
+  label: string;
 }
 
 /** GET /api/presets 목록의 한 줄 */

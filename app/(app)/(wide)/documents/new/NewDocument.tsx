@@ -19,7 +19,7 @@ export default function NewDocument() {
 
   if (!preset) return <ChooseIndustry />;
 
-  const draft = loadDraft(preset.code);
+  const draft = loadDraft(preset);
   return (
     <DocumentEditor
       key={preset.code}

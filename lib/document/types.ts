@@ -40,7 +40,10 @@ export interface LineRequest {
   description?: string;
   quantity: number | null;
   unit?: string;
+  /** 단가를 나눠 받는 업종(자재·노무)은 서버가 extra 의 합으로 정한다 */
   unitPrice: number | null;
+  /** 묶음을 쓰는 업종: 이 행이 속한 groups 의 순번(0부터) */
+  group?: number | null;
   extra?: Record<string, unknown>;
 }
 
@@ -54,7 +57,11 @@ export interface DocumentUpdateRequest {
   client?: ClientInput | null;
   terms: Record<string, string | number>;
   discountAmount: number | null;
+  /** 가산 항목 key → 비율(%) */
+  surchargeRates?: Record<string, number>;
   notes?: string | null;
+  /** 묶음 (useGroups 업종만) */
+  groups?: { name: string }[];
   lines: LineRequest[];
 }
 
@@ -66,6 +73,8 @@ export interface DocumentCreateRequest extends DocumentUpdateRequest {
 
 export interface DocumentLine {
   sortOrder: number;
+  /** 묶음 순번 (useGroups 업종만) */
+  group: number | null;
   name: string;
   description: string | null;
   quantity: number;
@@ -75,7 +84,7 @@ export interface DocumentLine {
   extra: Record<string, unknown>;
 }
 
-/** 서버가 계산해 저장한 금액. supply = subtotal − discount */
+/** 서버가 계산해 저장한 금액. supply = subtotal + 가산 − discount */
 export interface DocumentAmounts {
   subtotal: number;
   discount: number;
@@ -105,7 +114,10 @@ export interface DocumentResponse {
   };
   terms: Record<string, unknown>;
   notes: string | null;
+  groups: { name: string }[];
   lines: DocumentLine[];
+  /** 가산 항목. rate 는 % */
+  surcharges: { key: string; label: string; rate: number; amount: number }[];
   amounts: DocumentAmounts;
   createdAt: string;
   updatedAt: string;

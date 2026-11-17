@@ -11,6 +11,10 @@ import {
   emptyForm,
   emptyLine,
   formTotals,
+  lineUnitPrice,
+  percentInput,
+  pricePartsOf,
+  sortByGroups,
   todayString,
   toRequest,
   unitOptionsOf,
@@ -73,6 +77,9 @@ export default function DocumentEditor({
   const [nextLineId, setNextLineId] = useState(
     Math.max(0, ...initial.lines.map((l) => l.id)) + 1,
   );
+  const [nextGroupId, setNextGroupId] = useState(
+    Math.max(0, ...initial.groups.map((g) => g.id)) + 1,
+  );
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const [save, setSave] = useState<SaveState>(
     savedAt ? { kind: "saved", at: savedAt } : { kind: "idle" },
@@ -86,6 +93,7 @@ export default function DocumentEditor({
     setForm(fresh);
     setSavedForm(fresh);
     setNextLineId(Math.max(0, ...fresh.lines.map((l) => l.id)) + 1);
+    setNextGroupId(Math.max(0, ...fresh.groups.map((g) => g.id)) + 1);
     setShowRestored(false);
   };
 
@@ -139,8 +147,11 @@ export default function DocumentEditor({
     api.clients.list().then(setClients, () => setClients([]));
   }, [preset]);
 
-  const totals = formTotals(form);
+  const totals = formTotals(form, preset);
   const unitOptions = unitOptionsOf(preset);
+  // 단가를 나눠 받는 업종(시공의 자재·노무 단가)
+  const priceParts = pricePartsOf(preset);
+  const surcharges = preset.surcharges ?? [];
   // 품목 칸의 이름·예시는 업종 설정에서 (예: 프리랜서 "작업 항목", 행사 "항목")
   const nameColumn = columnOf(preset, "name", "항목");
   const descriptionColumn = columnOf(preset, "description", "내용");
@@ -165,28 +176,235 @@ export default function DocumentEditor({
       lines: prev.lines.map((l) => (l.id === id ? { ...l, ...patch } : l)),
     }));
 
-  const addLine = () => {
+  /** 행 추가. 묶음을 쓰는 업종은 그 묶음의 맨 끝에 */
+  const addLine = (groupId: number | null) => {
     setForm((prev) => ({
       ...prev,
-      lines: [...prev.lines, emptyLine(nextLineId, preset)],
+      lines: sortByGroups(
+        [...prev.lines, emptyLine(nextLineId, preset, groupId)],
+        prev.groups,
+      ),
     }));
     setNextLineId((n) => n + 1);
   };
+  /** 행 삭제. 마지막 한 줄(묶음을 쓰면 그 묶음의 마지막 한 줄)은 지우지 않는다 */
   const removeLine = (id: number) =>
-    setForm((prev) =>
-      prev.lines.length > 1
+    setForm((prev) => {
+      const line = prev.lines.find((l) => l.id === id);
+      const siblings = prev.lines.filter((l) => l.groupId === line?.groupId);
+      return siblings.length > 1
         ? { ...prev, lines: prev.lines.filter((l) => l.id !== id) }
-        : prev,
-    );
-  /** 행을 위(-1)나 아래(+1)로 한 칸 옮긴다 */
+        : prev;
+    });
+  /** 행을 위(-1)나 아래(+1)로 한 칸 옮긴다. 묶음 밖으로는 옮기지 않는다 */
   const moveLine = (index: number, step: -1 | 1) =>
     setForm((prev) => {
       const target = index + step;
       if (target < 0 || target >= prev.lines.length) return prev;
+      if (prev.lines[target].groupId !== prev.lines[index].groupId) return prev;
       const lines = [...prev.lines];
       [lines[index], lines[target]] = [lines[target], lines[index]];
       return { ...prev, lines };
     });
+
+  // 묶음(예: 시공의 공종). 새 묶음에는 빈 품목 한 줄을 같이 넣는다
+  const groupLabel = preset.groupLabel ?? "묶음";
+  const addGroup = () => {
+    const group = { id: nextGroupId, name: "" };
+    setForm((prev) => ({
+      ...prev,
+      groups: [...prev.groups, group],
+      lines: [...prev.lines, emptyLine(nextLineId, preset, group.id)],
+    }));
+    setNextGroupId((n) => n + 1);
+    setNextLineId((n) => n + 1);
+  };
+  const changeGroup = (id: number, name: string) =>
+    setForm((prev) => ({
+      ...prev,
+      groups: prev.groups.map((g) => (g.id === id ? { ...g, name } : g)),
+    }));
+  const removeGroup = (id: number) => {
+    const group = form.groups.find((g) => g.id === id);
+    const filled = form.lines.some(
+      (l) => l.groupId === id && (l.name.trim() !== "" || l.unitPrice !== ""),
+    );
+    if (
+      filled &&
+      !window.confirm(
+        `'${group?.name || groupLabel}'와 그 안의 품목을 모두 지울까요?`,
+      )
+    ) {
+      return;
+    }
+    setForm((prev) =>
+      prev.groups.length > 1
+        ? {
+            ...prev,
+            groups: prev.groups.filter((g) => g.id !== id),
+            lines: prev.lines.filter((l) => l.groupId !== id),
+          }
+        : prev,
+    );
+  };
+  const moveGroup = (index: number, step: -1 | 1) =>
+    setForm((prev) => {
+      const target = index + step;
+      if (target < 0 || target >= prev.groups.length) return prev;
+      const groups = [...prev.groups];
+      [groups[index], groups[target]] = [groups[target], groups[index]];
+      return { ...prev, groups, lines: sortByGroups(prev.lines, groups) };
+    });
+
+  /**
+   * 품목 한 줄의 입력 카드.
+   * @param i      form.lines 에서의 위치 (금액·이동에 쓴다)
+   * @param n      화면에 보이는 순번 (묶음을 쓰면 묶음 안에서의 순번)
+   */
+  function renderLine(
+    line: LineForm,
+    i: number,
+    n: number,
+    first: boolean,
+    last: boolean,
+    only: boolean,
+  ) {
+    return (
+      <li key={line.id} className="rounded-lg border border-rule bg-paper p-3">
+        <div className="flex items-center justify-between text-xs text-slate-500">
+          <span>{n + 1}번째 품목</span>
+          <span className="flex gap-1">
+            <IconButton
+              label="위로"
+              disabled={first}
+              onClick={() => moveLine(i, -1)}
+            >
+              ↑
+            </IconButton>
+            <IconButton
+              label="아래로"
+              disabled={last}
+              onClick={() => moveLine(i, 1)}
+            >
+              ↓
+            </IconButton>
+            <IconButton
+              label="삭제"
+              disabled={only}
+              onClick={() => removeLine(line.id)}
+            >
+              ×
+            </IconButton>
+          </span>
+        </div>
+        <div className="mt-2 space-y-2">
+          <input
+            className={input}
+            aria-label={nameColumn.label}
+            value={line.name}
+            onChange={(e) => changeLine(line.id, { name: e.target.value })}
+            placeholder={placeholderOf(nameColumn)}
+          />
+          <input
+            className={input}
+            aria-label={descriptionColumn.label}
+            value={line.description}
+            onChange={(e) =>
+              changeLine(line.id, { description: e.target.value })
+            }
+            placeholder={placeholderOf(descriptionColumn)}
+          />
+          {priceParts.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 items-start gap-2">
+                <input
+                  className={`${input} text-right`}
+                  aria-label={quantityColumn.label}
+                  inputMode="decimal"
+                  value={line.quantity}
+                  onChange={(e) =>
+                    changeLine(line.id, { quantity: e.target.value })
+                  }
+                  placeholder={quantityColumn.label}
+                />
+                <SelectWithCustom
+                  label="단위"
+                  options={unitOptions}
+                  value={line.unit}
+                  onChange={(unit) => changeLine(line.id, { unit })}
+                  placeholder="예: 식"
+                  maxLength={20}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {priceParts.map((part) => (
+                  <label key={part.key} className="block">
+                    <span className="mb-1 block text-xs text-slate-500">
+                      {part.label}
+                    </span>
+                    <input
+                      className={`${input} text-right`}
+                      inputMode="numeric"
+                      value={line.extra[part.key] ?? ""}
+                      onChange={(e) =>
+                        changeLine(line.id, {
+                          extra: {
+                            ...line.extra,
+                            [part.key]: withCommas(e.target.value),
+                          },
+                        })
+                      }
+                      placeholder="0"
+                    />
+                  </label>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-cols-[1fr_1fr_2fr] items-start gap-2">
+              <input
+                className={`${input} text-right`}
+                aria-label={quantityColumn.label}
+                inputMode="decimal"
+                value={line.quantity}
+                onChange={(e) =>
+                  changeLine(line.id, { quantity: e.target.value })
+                }
+              />
+              <SelectWithCustom
+                label="단위"
+                options={unitOptions}
+                value={line.unit}
+                onChange={(unit) => changeLine(line.id, { unit })}
+                placeholder="예: 컷"
+                maxLength={20}
+              />
+              <input
+                className={`${input} text-right`}
+                aria-label={unitPriceColumn.label}
+                inputMode="numeric"
+                value={line.unitPrice}
+                onChange={(e) =>
+                  changeLine(line.id, {
+                    unitPrice: withCommas(e.target.value),
+                  })
+                }
+                placeholder={unitPriceColumn.label}
+              />
+            </div>
+          )}
+          <p className="text-right text-sm tabular-nums text-slate-700">
+            {priceParts.length > 0 && (
+              <span className="mr-2 text-xs text-slate-500">
+                단가 {formatWon(lineUnitPrice(line, preset))}
+              </span>
+            )}
+            금액 {formatWon(totals.lineAmounts[i])}
+          </p>
+        </div>
+      </li>
+    );
+  }
 
   async function handleSave() {
     clearStatusOnHide.current = true;
@@ -359,7 +577,7 @@ export default function DocumentEditor({
                 className={input}
                 value={form.title}
                 onChange={(e) => change({ title: e.target.value })}
-                placeholder="예: 회사 소개 홈페이지 제작"
+                placeholder={preset.titlePlaceholder}
               />
             </Field>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -384,99 +602,121 @@ export default function DocumentEditor({
           </Section>
 
           <Section title="품목">
-            <ol className="space-y-3">
-              {form.lines.map((line, i) => (
-                <li key={line.id} className="rounded-lg border border-rule p-3">
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span>{i + 1}번째 품목</span>
-                    <span className="flex gap-1">
-                      <IconButton
-                        label="위로"
-                        disabled={i === 0}
-                        onClick={() => moveLine(i, -1)}
-                      >
-                        ↑
-                      </IconButton>
-                      <IconButton
-                        label="아래로"
-                        disabled={i === form.lines.length - 1}
-                        onClick={() => moveLine(i, 1)}
-                      >
-                        ↓
-                      </IconButton>
-                      <IconButton
-                        label="삭제"
-                        disabled={form.lines.length === 1}
-                        onClick={() => removeLine(line.id)}
-                      >
-                        ×
-                      </IconButton>
-                    </span>
-                  </div>
-                  <div className="mt-2 space-y-2">
-                    <input
-                      className={input}
-                      aria-label={nameColumn.label}
-                      value={line.name}
-                      onChange={(e) =>
-                        changeLine(line.id, { name: e.target.value })
-                      }
-                      placeholder={placeholderOf(nameColumn)}
-                    />
-                    <input
-                      className={input}
-                      aria-label={descriptionColumn.label}
-                      value={line.description}
-                      onChange={(e) =>
-                        changeLine(line.id, { description: e.target.value })
-                      }
-                      placeholder={placeholderOf(descriptionColumn)}
-                    />
-                    <div className="grid grid-cols-[1fr_1fr_2fr] items-start gap-2">
-                      <input
-                        className={`${input} text-right`}
-                        aria-label={quantityColumn.label}
-                        inputMode="decimal"
-                        value={line.quantity}
-                        onChange={(e) =>
-                          changeLine(line.id, { quantity: e.target.value })
-                        }
-                      />
-                      <SelectWithCustom
-                        label="단위"
-                        options={unitOptions}
-                        value={line.unit}
-                        onChange={(unit) => changeLine(line.id, { unit })}
-                        placeholder="예: 컷"
-                        maxLength={20}
-                      />
-                      <input
-                        className={`${input} text-right`}
-                        aria-label={unitPriceColumn.label}
-                        inputMode="numeric"
-                        value={line.unitPrice}
-                        onChange={(e) =>
-                          changeLine(line.id, {
-                            unitPrice: withCommas(e.target.value),
-                          })
-                        }
-                        placeholder={unitPriceColumn.label}
-                      />
+            {preset.useGroups ? (
+              <div className="space-y-4">
+                {form.groups.map((group, g) => {
+                  const indexes = form.lines
+                    .map((line, i) => (line.groupId === group.id ? i : -1))
+                    .filter((i) => i >= 0);
+                  const subtotal = indexes.reduce(
+                    (sum, i) => sum + totals.lineAmounts[i],
+                    0,
+                  );
+                  return (
+                    <div
+                      key={group.id}
+                      className="rounded-lg border border-rule bg-slate-50/60 p-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <input
+                          className={`${input} font-semibold`}
+                          aria-label={`${g + 1}번째 ${groupLabel} 이름`}
+                          list="group-options"
+                          value={group.name}
+                          maxLength={100}
+                          onChange={(e) =>
+                            changeGroup(group.id, e.target.value)
+                          }
+                          placeholder={`${groupLabel} 이름 (예: ${preset.groupOptions?.[3] ?? "목공"})`}
+                        />
+                        <span className="flex shrink-0 gap-1">
+                          <IconButton
+                            label={`${groupLabel} 위로`}
+                            disabled={g === 0}
+                            onClick={() => moveGroup(g, -1)}
+                          >
+                            ↑
+                          </IconButton>
+                          <IconButton
+                            label={`${groupLabel} 아래로`}
+                            disabled={g === form.groups.length - 1}
+                            onClick={() => moveGroup(g, 1)}
+                          >
+                            ↓
+                          </IconButton>
+                          <IconButton
+                            label={`${groupLabel} 삭제`}
+                            disabled={form.groups.length === 1}
+                            onClick={() => removeGroup(group.id)}
+                          >
+                            ×
+                          </IconButton>
+                        </span>
+                      </div>
+                      <ol className="mt-3 space-y-3">
+                        {indexes.map((i, n) =>
+                          renderLine(
+                            form.lines[i],
+                            i,
+                            n,
+                            n === 0,
+                            n === indexes.length - 1,
+                            indexes.length === 1,
+                          ),
+                        )}
+                      </ol>
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <button
+                          type="button"
+                          onClick={() => addLine(group.id)}
+                          className="rounded-md border border-dashed border-slate-300 bg-paper px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+                        >
+                          + 품목 추가
+                        </button>
+                        <p className="text-sm font-medium tabular-nums text-slate-700">
+                          {group.name.trim() || groupLabel} 소계{" "}
+                          {formatWon(subtotal)}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-right text-sm tabular-nums text-slate-700">
-                      금액 {formatWon(totals.lineAmounts[i])}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-            <button
-              type="button"
-              onClick={addLine}
-              className="mt-3 w-full rounded-md border border-dashed border-slate-300 py-2 text-sm text-slate-600 hover:bg-slate-50"
-            >
-              + 품목 추가
-            </button>
+                  );
+                })}
+                <datalist id="group-options">
+                  {(preset.groupOptions ?? []).map((o) => (
+                    <option key={o} value={o} />
+                  ))}
+                </datalist>
+                <button
+                  type="button"
+                  onClick={addGroup}
+                  className="w-full rounded-md border border-dashed border-slate-300 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                >
+                  + {groupLabel} 추가
+                </button>
+              </div>
+            ) : (
+              <>
+                <ol className="space-y-3">
+                  {form.lines.map((line, i) =>
+                    renderLine(
+                      line,
+                      i,
+                      i,
+                      i === 0,
+                      i === form.lines.length - 1,
+                      form.lines.length === 1,
+                    ),
+                  )}
+                </ol>
+                <button
+                  type="button"
+                  onClick={() => addLine(null)}
+                  className="mt-3 w-full rounded-md border border-dashed border-slate-300 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                >
+                  + 품목 추가
+                </button>
+              </>
+            )}
           </Section>
 
           {preset.termFields.length > 0 && (
@@ -511,7 +751,6 @@ export default function DocumentEditor({
               </div>
             </Section>
           )}
-
           <Section title="세금 방식과 합계">
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="세금 방식">
@@ -529,6 +768,29 @@ export default function DocumentEditor({
                   ))}
                 </select>
               </Field>
+              {surcharges.map((s, k) => (
+                <Field key={s.key} label={`${s.label} (%)`}>
+                  <div className="flex items-center gap-2">
+                    <input
+                      className={`${input} text-right`}
+                      inputMode="decimal"
+                      value={form.surcharges[s.key] ?? ""}
+                      onChange={(e) =>
+                        change({
+                          surcharges: {
+                            ...form.surcharges,
+                            [s.key]: percentInput(e.target.value),
+                          },
+                        })
+                      }
+                      placeholder="0"
+                    />
+                    <span className="w-28 shrink-0 text-right text-sm tabular-nums text-slate-500">
+                      {formatWon(totals.surchargeAmounts[k] ?? 0)}
+                    </span>
+                  </div>
+                </Field>
+              ))}
               <Field label="할인 (원)">
                 <input
                   className={`${input} text-right`}
@@ -612,10 +874,6 @@ export default function DocumentEditor({
   );
 }
 
-/**
- * 새 문서(profileId 가 아직 undefined)에 기본 내 정보를 고르고, 그 기본 세금 방식이 이 업종에서 쓸 수 있으면 따른다.
- * 이미 정해졌으면(고른 것이든 "선택 안 함"이든) 그대로 둔다.
- */
 /** 업종 설정의 열. 설정에 없으면 이름만 있는 기본 열 */
 function columnOf(
   preset: Preset,
@@ -637,6 +895,10 @@ function placeholderOf(column: PresetColumn): string {
   return `${column.label}${example}${column.required ? "" : " (선택)"}`;
 }
 
+/**
+ * 새 문서(profileId 가 아직 undefined)에 기본 내 정보를 고르고, 그 기본 세금 방식이 이 업종에서 쓸 수 있으면 따른다.
+ * 이미 정해졌으면(고른 것이든 "선택 안 함"이든) 그대로 둔다.
+ */
 function withDefaultSupplier(
   form: DocumentForm,
   profiles: Profile[],

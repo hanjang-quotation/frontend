@@ -28,8 +28,8 @@ export const industries: Industry[] = [
     code: "construction",
     name: "인테리어·시공",
     description: "공종별 시공 견적서",
-    examples: "공종 묶음, 자재비·인건비, 면적 단위",
-    ready: false,
+    examples: "공종별 소계, 자재·노무 단가, 공과잡비·기업이윤",
+    ready: true,
   },
   {
     code: "printing",

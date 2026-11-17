@@ -2,7 +2,7 @@
 // 입력란은 모두 문자열로 다루고, 보낼 때 숫자로 바꾼다.
 
 import { calculateTotals, type TaxMode, type Totals } from "@/lib/calc";
-import type { Preset } from "@/lib/preset/types";
+import type { Preset, PresetColumn } from "@/lib/preset/types";
 import type {
   ClientInput,
   DocumentResponse,
@@ -12,12 +12,23 @@ import type {
 export interface LineForm {
   /** 화면에서 행을 구분하는 값. 서버에는 보내지 않는다 */
   id: number;
+  /** 묶음을 쓰는 업종(useGroups)에서 이 행이 속한 GroupForm.id. 그 밖에는 null */
+  groupId: number | null;
   name: string;
   description: string;
   quantity: string;
   unit: string;
-  /** 쉼표가 들어간 문자열. 예: "1,500,000" */
+  /** 쉼표가 들어간 문자열. 예: "1,500,000". 단가를 나눠 받는 업종은 쓰지 않는다 */
   unitPrice: string;
+  /** 업종별 추가 열의 입력값. 예: 시공의 materialPrice·laborPrice (쉼표가 들어간 금액) */
+  extra: Record<string, string>;
+}
+
+/** 행 묶음 (예: 시공의 공종) */
+export interface GroupForm {
+  /** 화면에서 묶음을 구분하는 값. 서버에는 순번으로 보낸다 */
+  id: number;
+  name: string;
 }
 
 export interface ClientForm {
@@ -56,7 +67,12 @@ export interface DocumentForm {
   terms: Record<string, string>;
   taxMode: TaxMode;
   discount: string;
+  /** 업종 설정 surcharges 의 key → 비율(%) 입력값. 예: "5", "2.5" */
+  surcharges: Record<string, string>;
   notes: string;
+  /** 묶음 (useGroups 업종만, 그 밖에는 빈 목록) */
+  groups: GroupForm[];
+  /** 묶음을 쓰는 업종에서는 항상 묶음 순서대로 붙어 있다 (같은 묶음의 행이 이어진다) */
   lines: LineForm[];
 }
 
@@ -73,6 +89,14 @@ export function withCommas(value: string): string {
   return digits === "" ? "" : Number(digits).toLocaleString("ko-KR");
 }
 
+/** 비율(%) 입력란: 숫자와 소수점 하나, 소수 첫째 자리까지 */
+export function percentInput(value: string): string {
+  const cleaned = value.replace(/[^\d.]/g, "");
+  const [whole, ...rest] = cleaned.split(".");
+  if (rest.length === 0) return whole;
+  return `${whole}.${rest.join("").slice(0, 1)}`;
+}
+
 /** 빈 값이면 null, 숫자가 아니면 NaN 대신 null (서버가 "입력해 주세요"로 알려 준다) */
 export function parseNumber(value: string): number | null {
   const trimmed = value.replaceAll(",", "").trim();
@@ -81,18 +105,46 @@ export function parseNumber(value: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export function emptyLine(id: number, preset: Preset): LineForm {
+/** 단가를 나눠 받는 열 (예: 자재 단가·노무 단가). 없으면 빈 목록 */
+export function pricePartsOf(preset: Preset): PresetColumn[] {
+  return preset.columns.filter((c) => c.partOf === "unitPrice");
+}
+
+/** 행의 단가(원). 나눠 받는 업종은 나눈 칸의 합 */
+export function lineUnitPrice(line: LineForm, preset: Preset): number {
+  const parts = pricePartsOf(preset);
+  if (parts.length === 0) return parseNumber(line.unitPrice) ?? 0;
+  return parts.reduce(
+    (sum, part) => sum + (parseNumber(line.extra[part.key] ?? "") ?? 0),
+    0,
+  );
+}
+
+/** 비율 입력값(%)을 1000분율 정수로. 5 → 50, 2.5 → 25 */
+function perMilleOf(value: string): number {
+  return Math.round((parseNumber(value) ?? 0) * 10);
+}
+
+export function emptyLine(
+  id: number,
+  preset: Preset,
+  groupId: number | null = null,
+): LineForm {
   const unitOptions = unitOptionsOf(preset);
   const quantityDefault = preset.columns.find(
     (c) => c.key === "quantity",
   )?.default;
+  const extra: Record<string, string> = {};
+  for (const part of pricePartsOf(preset)) extra[part.key] = "";
   return {
     id,
+    groupId,
     name: "",
     description: "",
     quantity: quantityDefault === undefined ? "1" : String(quantityDefault),
     unit: unitOptions[0] ?? "",
     unitPrice: "",
+    extra,
   };
 }
 
@@ -105,6 +157,9 @@ export function emptyForm(preset: Preset, today: string): DocumentForm {
   for (const field of preset.termFields) {
     terms[field.key] = field.default === undefined ? "" : String(field.default);
   }
+  const surcharges: Record<string, string> = {};
+  for (const s of preset.surcharges ?? []) surcharges[s.key] = "";
+  const groups = preset.useGroups ? [{ id: 1, name: "" }] : [];
   return {
     title: "",
     issueDate: today,
@@ -113,20 +168,75 @@ export function emptyForm(preset: Preset, today: string): DocumentForm {
     terms,
     taxMode: preset.defaultTaxMode,
     discount: "",
+    surcharges,
     notes: "",
-    lines: [emptyLine(1, preset)],
+    groups,
+    lines: [emptyLine(1, preset, preset.useGroups ? 1 : null)],
+  };
+}
+
+/**
+ * 예전 형식(묶음·가산 항목이 생기기 전)으로 보관된 입력값을 지금 형식으로 맞춘다.
+ * 브라우저 임시 보관본을 되살릴 때 쓴다
+ */
+export function normalizeForm(
+  form: DocumentForm,
+  preset: Preset,
+): DocumentForm {
+  const blank = emptyForm(preset, form.issueDate);
+  const groups = Array.isArray(form.groups) ? form.groups : [];
+  if (preset.useGroups && groups.length === 0) return blank;
+  return {
+    ...form,
+    surcharges: { ...blank.surcharges, ...(form.surcharges ?? {}) },
+    groups,
+    lines: form.lines.map((line) => ({
+      ...line,
+      groupId: line.groupId ?? null,
+      extra: { ...emptyLine(0, preset).extra, ...(line.extra ?? {}) },
+    })),
   };
 }
 
 /** 저장된 문서를 입력값으로 바꾼다 */
 export function formFromDocument(doc: DocumentResponse): DocumentForm {
+  const preset = doc.presetSnapshot;
   const client = doc.partySnapshot.client ?? {};
   const terms: Record<string, string> = {};
-  for (const field of doc.presetSnapshot.termFields) {
+  for (const field of preset.termFields) {
     const value = doc.terms[field.key];
     terms[field.key] =
       value === undefined || value === null ? "" : String(value);
   }
+  const surcharges: Record<string, string> = {};
+  for (const s of preset.surcharges ?? []) {
+    const rate = doc.surcharges?.find((x) => x.key === s.key)?.rate ?? 0;
+    surcharges[s.key] = rate > 0 ? String(rate) : "";
+  }
+  const parts = pricePartsOf(preset);
+  const groups = (doc.groups ?? []).map((g, i) => ({
+    id: i + 1,
+    name: g.name,
+  }));
+  const lines = doc.lines.map((line, i) => {
+    const extra: Record<string, string> = {};
+    for (const part of parts) {
+      const value = line.extra?.[part.key];
+      extra[part.key] =
+        value === undefined || value === null ? "" : withCommas(String(value));
+    }
+    return {
+      id: i + 1,
+      groupId:
+        line.group === null || line.group === undefined ? null : line.group + 1,
+      name: line.name,
+      description: line.description ?? "",
+      quantity: String(line.quantity),
+      unit: line.unit ?? "",
+      unitPrice: withCommas(String(line.unitPrice)),
+      extra,
+    };
+  });
   return {
     profileId: doc.profileId,
     title: doc.title,
@@ -145,16 +255,24 @@ export function formFromDocument(doc: DocumentResponse): DocumentForm {
     taxMode: doc.taxMode,
     discount:
       doc.amounts.discount > 0 ? withCommas(String(doc.amounts.discount)) : "",
+    surcharges,
     notes: doc.notes ?? "",
-    lines: doc.lines.map((line, i) => ({
-      id: i + 1,
-      name: line.name,
-      description: line.description ?? "",
-      quantity: String(line.quantity),
-      unit: line.unit ?? "",
-      unitPrice: withCommas(String(line.unitPrice)),
-    })),
+    groups,
+    lines: sortByGroups(lines, groups),
   };
+}
+
+/** 행을 묶음 순서대로 다시 늘어놓는다. 같은 묶음 안의 순서는 그대로. 묶음이 없으면 그대로 */
+export function sortByGroups(
+  lines: LineForm[],
+  groups: GroupForm[],
+): LineForm[] {
+  if (groups.length === 0) return lines;
+  const order = new Map(groups.map((g, i) => [g.id, i]));
+  return [...lines].sort(
+    (a, b) =>
+      (order.get(a.groupId ?? -1) ?? 0) - (order.get(b.groupId ?? -1) ?? 0),
+  );
 }
 
 /** 입력값을 API 요청으로 바꾼다. 합계는 넣지 않는다 */
@@ -170,6 +288,14 @@ export function toRequest(
     terms[field.key] = n ?? value;
   }
 
+  const surchargeRates: Record<string, number> = {};
+  for (const s of preset.surcharges ?? []) {
+    surchargeRates[s.key] = parseNumber(form.surcharges[s.key] ?? "") ?? 0;
+  }
+
+  const parts = pricePartsOf(preset);
+  const groupIndex = new Map(form.groups.map((g, i) => [g.id, i]));
+
   return {
     profileId: form.profileId ?? null,
     title: form.title.trim(),
@@ -179,14 +305,26 @@ export function toRequest(
     client: clientRequest(form.client),
     terms,
     discountAmount: parseNumber(form.discount) ?? 0,
+    surchargeRates,
     notes: form.notes.trim() || null,
-    lines: form.lines.map((line) => ({
-      name: line.name.trim(),
-      description: line.description.trim(),
-      quantity: parseNumber(line.quantity),
-      unit: line.unit,
-      unitPrice: parseNumber(line.unitPrice),
-    })),
+    groups: form.groups.map((g) => ({ name: g.name.trim() })),
+    lines: sortByGroups(form.lines, form.groups).map((line) => {
+      const extra: Record<string, number | null> = {};
+      for (const part of parts) {
+        extra[part.key] = parseNumber(line.extra[part.key] ?? "");
+      }
+      return {
+        name: line.name.trim(),
+        description: line.description.trim(),
+        quantity: parseNumber(line.quantity),
+        unit: line.unit,
+        // 나눠 받는 업종은 서버가 extra 의 합으로 정한다
+        unitPrice: parts.length > 0 ? null : parseNumber(line.unitPrice),
+        group:
+          line.groupId === null ? null : (groupIndex.get(line.groupId) ?? null),
+        ...(parts.length > 0 ? { extra } : {}),
+      };
+    }),
   };
 }
 
@@ -204,14 +342,20 @@ function clientRequest(c: ClientForm): ClientInput | null {
   return Object.values(fields).some((v) => v !== "") ? fields : null;
 }
 
-/** 미리보기용 합계. 저장할 때는 서버가 다시 계산한다 */
-export function formTotals(form: DocumentForm): Totals {
+/**
+ * 미리보기용 합계. 저장할 때는 서버가 다시 계산한다.
+ * lineAmounts 는 form.lines 와 같은 순서다
+ */
+export function formTotals(form: DocumentForm, preset: Preset): Totals {
   return calculateTotals(
     form.lines.map((line) => ({
       quantity: parseNumber(line.quantity) ?? 0,
-      unitPrice: parseNumber(line.unitPrice) ?? 0,
+      unitPrice: lineUnitPrice(line, preset),
     })),
     parseNumber(form.discount) ?? 0,
     form.taxMode,
+    (preset.surcharges ?? []).map((s) =>
+      perMilleOf(form.surcharges[s.key] ?? ""),
+    ),
   );
 }

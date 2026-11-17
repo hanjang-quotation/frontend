@@ -21,6 +21,14 @@ function roundTax(supply: number, perMille: number): number {
   return Math.floor((supply * perMille) / 1000);
 }
 
+/**
+ * 가산 항목(공과잡비·기업이윤)의 원 미만 처리. 원 미만 버림.
+ * 바꿀 때는 이 함수와 백엔드 DocumentCalculator.roundSurcharge 를 함께 고친다.
+ */
+function roundSurcharge(subtotal: number, perMille: number): number {
+  return Math.floor((subtotal * perMille) / 1000);
+}
+
 export interface LineInput {
   /** 소수 둘째 자리까지 */
   quantity: number;
@@ -31,8 +39,10 @@ export interface LineInput {
 export interface Totals {
   lineAmounts: number[];
   subtotalAmount: number;
+  /** 가산 항목별 금액 (입력 순서 그대로) */
+  surchargeAmounts: number[];
   discountAmount: number;
-  /** 공급 금액 = 소계 − 할인 */
+  /** 공급 금액 = 소계 + 가산 − 할인 */
   supplyAmount: number;
   /** 부가세 또는 공제액 */
   taxAmount: number;
@@ -50,18 +60,28 @@ export function lineAmount(quantity: number, unitPrice: number): number {
   return Math.floor((hundredths * Math.round(p) + 50) / 100);
 }
 
+/**
+ * @param surchargePerMille 가산 항목(공과잡비·기업이윤 등)의 비율. 1000분율 (50 = 5%, 25 = 2.5%).
+ *   각 항목은 소계 × 비율이고, 공급 금액 = 소계 + 가산 − 할인
+ */
 export function calculateTotals(
   lines: LineInput[],
   discountAmount: number,
   taxMode: TaxMode,
+  surchargePerMille: number[] = [],
 ): Totals {
   const lineAmounts = lines.map((l) => lineAmount(l.quantity, l.unitPrice));
   const subtotalAmount = lineAmounts.reduce((sum, a) => sum + a, 0);
+  const surchargeAmounts = surchargePerMille.map((perMille) =>
+    roundSurcharge(subtotalAmount, Math.min(Math.max(0, perMille), 1000)),
+  );
+  const beforeDiscount =
+    subtotalAmount + surchargeAmounts.reduce((sum, a) => sum + a, 0);
   const discount = Math.min(
     Math.max(0, Math.round(discountAmount || 0)),
-    subtotalAmount,
+    beforeDiscount,
   );
-  const supplyAmount = subtotalAmount - discount;
+  const supplyAmount = beforeDiscount - discount;
 
   let taxAmount = 0;
   let totalAmount = supplyAmount;
@@ -79,6 +99,7 @@ export function calculateTotals(
   return {
     lineAmounts,
     subtotalAmount,
+    surchargeAmounts,
     discountAmount: discount,
     supplyAmount,
     taxAmount,

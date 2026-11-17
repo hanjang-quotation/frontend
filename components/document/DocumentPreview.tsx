@@ -1,6 +1,11 @@
 import { formatWon, type Totals } from "@/lib/calc";
 import { formatDate } from "@/lib/format";
-import type { DocumentForm } from "@/lib/document/form";
+import { Fragment } from "react";
+import {
+  pricePartsOf,
+  type DocumentForm,
+  type LineForm,
+} from "@/lib/document/form";
 import { partyView, type PartyView } from "@/lib/party/types";
 import type { Preset } from "@/lib/preset/types";
 
@@ -28,9 +33,37 @@ export default function DocumentPreview({
   const filledTerms = preset.termFields.filter(
     (field) => (form.terms[field.key] ?? "").trim() !== "",
   );
+  // 단가 칸: 보통 단가 하나, 시공은 자재·노무 단가
+  const priceParts = pricePartsOf(preset);
+  const priceColumns =
+    priceParts.length > 0
+      ? priceParts.map((p) => ({ key: p.key, label: p.label }))
+      : [{ key: "unitPrice", label: "단가" }];
+  const columnCount = 4 + priceColumns.length;
+  const isFilled = (line: LineForm) =>
+    line.name.trim() !== "" ||
+    line.unitPrice !== "" ||
+    Object.values(line.extra).some((v) => v !== "");
   const filledLines = form.lines
     .map((line, i) => ({ line, amount: totals.lineAmounts[i] }))
-    .filter(({ line }) => line.name.trim() !== "" || line.unitPrice !== "");
+    .filter(({ line }) => isFilled(line));
+  const numberOf = new Map(filledLines.map(({ line }, i) => [line.id, i + 1]));
+  // 묶음을 쓰면 묶음 순서대로 [묶음, 그 안의 품목]. 품목을 하나도 적지 않은 묶음은 뺀다
+  const sections = preset.useGroups
+    ? form.groups
+        .map((group) => ({
+          group,
+          rows: filledLines.filter(({ line }) => line.groupId === group.id),
+        }))
+        .filter((s) => s.rows.length > 0)
+    : [{ group: null, rows: filledLines }];
+  const filledSurcharges = (preset.surcharges ?? [])
+    .map((s, k) => ({
+      ...s,
+      rate: (form.surcharges[s.key] ?? "").trim(),
+      amount: totals.surchargeAmounts[k] ?? 0,
+    }))
+    .filter((s) => Number(s.rate) > 0);
 
   return (
     <article className="rounded-xl border border-rule bg-paper p-6 text-[13px] leading-relaxed text-slate-800 shadow-sm sm:p-8">
@@ -118,49 +151,109 @@ export default function DocumentPreview({
               {preset.columns.find((c) => c.key === "name")?.label ?? "항목"}
             </th>
             <th className="w-14 py-2 text-right font-medium">수량</th>
-            <th className="w-24 py-2 text-right font-medium">단가</th>
+            {priceColumns.map((c) => (
+              <th
+                key={c.key}
+                className={`${priceColumns.length > 1 ? "w-20" : "w-24"} py-2 text-right font-medium`}
+              >
+                {c.label}
+              </th>
+            ))}
             <th className="w-28 py-2 text-right font-medium">금액</th>
           </tr>
         </thead>
         <tbody>
           {filledLines.length === 0 && (
             <tr>
-              <td colSpan={5} className="py-6 text-center text-slate-400">
+              <td
+                colSpan={columnCount}
+                className="py-6 text-center text-slate-400"
+              >
                 품목을 입력하면 여기에 표시됩니다.
               </td>
             </tr>
           )}
-          {filledLines.map(({ line, amount }, i) => (
-            <tr key={line.id} className="border-b border-slate-100 align-top">
-              <td className="py-2 text-center text-slate-500">{i + 1}</td>
-              <td className="py-2">
-                <p className="text-ink">{line.name || "-"}</p>
-                {line.description.trim() && (
-                  <p className="text-xs text-slate-500">{line.description}</p>
-                )}
-              </td>
-              <td className="py-2 text-right tabular-nums">
-                {line.quantity || 0}
-                {line.unit && (
-                  <span className="text-slate-500"> {line.unit}</span>
-                )}
-              </td>
-              <td className="py-2 text-right tabular-nums">
-                {line.unitPrice || 0}
-              </td>
-              <td className="py-2 text-right tabular-nums">
-                {amount.toLocaleString("ko-KR")}
-              </td>
-            </tr>
+          {sections.map(({ group, rows }) => (
+            <Fragment key={group?.id ?? "all"}>
+              {group && (
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <td
+                    colSpan={columnCount}
+                    className="px-1 py-1.5 font-semibold text-ink"
+                  >
+                    {group.name.trim() || preset.groupLabel || "묶음"}
+                  </td>
+                </tr>
+              )}
+              {rows.map(({ line, amount }) => (
+                <tr
+                  key={line.id}
+                  className="border-b border-slate-100 align-top"
+                >
+                  <td className="py-2 text-center text-slate-500">
+                    {numberOf.get(line.id)}
+                  </td>
+                  <td className="py-2">
+                    <p className="text-ink">{line.name || "-"}</p>
+                    {line.description.trim() && (
+                      <p className="text-xs text-slate-500">
+                        {line.description}
+                      </p>
+                    )}
+                  </td>
+                  <td className="py-2 text-right tabular-nums">
+                    {line.quantity || 0}
+                    {line.unit && (
+                      <span className="text-slate-500"> {line.unit}</span>
+                    )}
+                  </td>
+                  {priceColumns.map((c) => (
+                    <td key={c.key} className="py-2 text-right tabular-nums">
+                      {(c.key === "unitPrice"
+                        ? line.unitPrice
+                        : line.extra[c.key]) || 0}
+                    </td>
+                  ))}
+                  <td className="py-2 text-right tabular-nums">
+                    {amount.toLocaleString("ko-KR")}
+                  </td>
+                </tr>
+              ))}
+              {group && (
+                <tr className="border-b border-slate-200">
+                  <td
+                    colSpan={columnCount - 1}
+                    className="py-1.5 text-right font-medium text-slate-600"
+                  >
+                    {group.name.trim() || preset.groupLabel || "묶음"} 소계
+                  </td>
+                  <td className="py-1.5 text-right font-medium tabular-nums text-slate-700">
+                    {rows
+                      .reduce((sum, r) => sum + r.amount, 0)
+                      .toLocaleString("ko-KR")}
+                  </td>
+                </tr>
+              )}
+            </Fragment>
           ))}
         </tbody>
       </table>
 
       <dl className="mt-4 ml-auto max-w-xs space-y-1 tabular-nums">
         <div className="flex justify-between">
-          <dt className="text-slate-600">소계</dt>
+          <dt className="text-slate-600">
+            {preset.useGroups ? "품목 합계" : "소계"}
+          </dt>
           <dd>{formatWon(totals.subtotalAmount)}</dd>
         </div>
+        {filledSurcharges.map((s) => (
+          <div key={s.key} className="flex justify-between">
+            <dt className="text-slate-600">
+              {s.label} {Number(s.rate)}%
+            </dt>
+            <dd>{formatWon(s.amount)}</dd>
+          </div>
+        ))}
         {totals.discountAmount > 0 && (
           <div className="flex justify-between">
             <dt className="text-slate-600">할인</dt>
