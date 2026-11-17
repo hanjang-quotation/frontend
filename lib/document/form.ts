@@ -20,8 +20,20 @@ export interface LineForm {
   unit: string;
   /** 쉼표가 들어간 문자열. 예: "1,500,000". 단가를 나눠 받는 업종은 쓰지 않는다 */
   unitPrice: string;
-  /** 업종별 추가 열의 입력값. 예: 시공의 materialPrice·laborPrice (쉼표가 들어간 금액) */
+  /**
+   * 업종별 추가 열의 입력값. 예: 시공의 materialPrice·laborPrice (쉼표가 들어간 금액),
+   * 인쇄의 paper·printing·finishing (글자)
+   */
   extra: Record<string, string>;
+  /** 수량별 가격 (quantityOptions 열이 있는 업종만). 합계에는 들어가지 않는다 */
+  options?: QuantityOptionForm[];
+}
+
+/** 수량별 가격 한 줄. 예: 500매 45,000원 */
+export interface QuantityOptionForm {
+  quantity: string;
+  /** 쉼표가 들어간 금액 */
+  amount: string;
 }
 
 /** 행 묶음 (예: 시공의 공종) */
@@ -110,6 +122,34 @@ export function pricePartsOf(preset: Preset): PresetColumn[] {
   return preset.columns.filter((c) => c.partOf === "unitPrice");
 }
 
+/** 품명 아래 한 줄에 보여 주는 사양 열 (예: 인쇄의 용지·인쇄·후가공) */
+export function detailColumnsOf(preset: Preset): PresetColumn[] {
+  return preset.columns.filter((c) => c.display === "detail");
+}
+
+/** 수량별 가격 열. 없으면 undefined */
+export function optionsColumnOf(preset: Preset): PresetColumn | undefined {
+  return preset.columns.find((c) => c.type === "quantityOptions");
+}
+
+/** 품명 아래 한 줄: 규격 · 용지 · 인쇄 · 후가공 (빈 칸은 뺀다) */
+export function lineDetail(line: LineForm, preset: Preset): string {
+  return [
+    line.description,
+    ...detailColumnsOf(preset).map((c) => line.extra[c.key] ?? ""),
+  ]
+    .map((v) => v.trim())
+    .filter((v) => v !== "")
+    .join(" · ");
+}
+
+/** 수량과 금액을 다 적은 수량별 가격만 */
+export function filledOptions(line: LineForm): QuantityOptionForm[] {
+  return (line.options ?? []).filter(
+    (o) => parseNumber(o.quantity) !== null && parseNumber(o.amount) !== null,
+  );
+}
+
 /** 행의 단가(원). 나눠 받는 업종은 나눈 칸의 합 */
 export function lineUnitPrice(line: LineForm, preset: Preset): number {
   const parts = pricePartsOf(preset);
@@ -136,6 +176,7 @@ export function emptyLine(
   )?.default;
   const extra: Record<string, string> = {};
   for (const part of pricePartsOf(preset)) extra[part.key] = "";
+  for (const column of detailColumnsOf(preset)) extra[column.key] = "";
   return {
     id,
     groupId,
@@ -145,6 +186,7 @@ export function emptyLine(
     unit: unitOptions[0] ?? "",
     unitPrice: "",
     extra,
+    options: [],
   };
 }
 
@@ -214,6 +256,8 @@ export function formFromDocument(doc: DocumentResponse): DocumentForm {
     surcharges[s.key] = rate > 0 ? String(rate) : "";
   }
   const parts = pricePartsOf(preset);
+  const details = detailColumnsOf(preset);
+  const optionsColumn = optionsColumnOf(preset);
   const groups = (doc.groups ?? []).map((g, i) => ({
     id: i + 1,
     name: g.name,
@@ -225,7 +269,20 @@ export function formFromDocument(doc: DocumentResponse): DocumentForm {
       extra[part.key] =
         value === undefined || value === null ? "" : withCommas(String(value));
     }
+    for (const column of details) {
+      const value = line.extra?.[column.key];
+      extra[column.key] =
+        value === undefined || value === null ? "" : String(value);
+    }
+    const saved = optionsColumn ? line.extra?.[optionsColumn.key] : undefined;
+    const options = Array.isArray(saved)
+      ? (saved as { quantity: number; amount: number }[]).map((o) => ({
+          quantity: String(o.quantity),
+          amount: withCommas(String(o.amount)),
+        }))
+      : [];
     return {
+      options,
       id: i + 1,
       groupId:
         line.group === null || line.group === undefined ? null : line.group + 1,
@@ -294,6 +351,8 @@ export function toRequest(
   }
 
   const parts = pricePartsOf(preset);
+  const details = detailColumnsOf(preset);
+  const optionsColumn = optionsColumnOf(preset);
   const groupIndex = new Map(form.groups.map((g, i) => [g.id, i]));
 
   return {
@@ -309,9 +368,19 @@ export function toRequest(
     notes: form.notes.trim() || null,
     groups: form.groups.map((g) => ({ name: g.name.trim() })),
     lines: sortByGroups(form.lines, form.groups).map((line) => {
-      const extra: Record<string, number | null> = {};
+      const extra: Record<string, unknown> = {};
       for (const part of parts) {
         extra[part.key] = parseNumber(line.extra[part.key] ?? "");
+      }
+      for (const column of details) {
+        const value = (line.extra[column.key] ?? "").trim();
+        if (value !== "") extra[column.key] = value;
+      }
+      if (optionsColumn) {
+        extra[optionsColumn.key] = filledOptions(line).map((o) => ({
+          quantity: parseNumber(o.quantity),
+          amount: parseNumber(o.amount),
+        }));
       }
       return {
         name: line.name.trim(),
@@ -322,7 +391,7 @@ export function toRequest(
         unitPrice: parts.length > 0 ? null : parseNumber(line.unitPrice),
         group:
           line.groupId === null ? null : (groupIndex.get(line.groupId) ?? null),
-        ...(parts.length > 0 ? { extra } : {}),
+        ...(Object.keys(extra).length > 0 ? { extra } : {}),
       };
     }),
   };

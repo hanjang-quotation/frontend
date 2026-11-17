@@ -35,7 +35,7 @@ export const industries: Industry[] = [
     code: "printing",
     name: "인쇄·제작",
     description: "사양별 인쇄 견적서",
-    examples: "규격, 용지, 수량 구간, 후가공",
-    ready: false,
+    examples: "규격·용지·인쇄·후가공, 수량별 가격",
+    ready: true,
   },
 ];

@@ -61,9 +61,8 @@ export default function HomePage() {
           업종별 양식
         </h2>
         <p className="mt-1 text-sm text-slate-500">
-          업종마다 필요한 칸과 계산 방식이 다릅니다. 지금은 프리랜서,
-          행사·케이터링, 인테리어·시공 양식을 쓸 수 있고, 인쇄·제작은 만들고
-          있습니다.
+          업종마다 필요한 칸과 계산 방식이 미리 맞춰져 있습니다. 업종을 고르면
+          예시 견적서를 볼 수 있습니다.
         </p>
         <ul className="mt-6 divide-y divide-rule border-y border-rule">
           {industries.map((industry) => (

@@ -9,9 +9,11 @@ import { ApiError, api } from "@/lib/api/client";
 import { TAX_MODE_LABELS, formatWon, type TaxMode } from "@/lib/calc";
 import {
   emptyForm,
+  detailColumnsOf,
   emptyLine,
   formTotals,
   lineUnitPrice,
+  optionsColumnOf,
   percentInput,
   pricePartsOf,
   sortByGroups,
@@ -21,6 +23,7 @@ import {
   withCommas,
   type DocumentForm,
   type LineForm,
+  type QuantityOptionForm,
 } from "@/lib/document/form";
 import { clearDraft, saveDraft } from "@/lib/document/draft";
 import type { DocumentStatus } from "@/lib/document/types";
@@ -151,6 +154,9 @@ export default function DocumentEditor({
   const unitOptions = unitOptionsOf(preset);
   // 단가를 나눠 받는 업종(시공의 자재·노무 단가)
   const priceParts = pricePartsOf(preset);
+  // 품명 아래 한 줄로 보이는 사양 칸(인쇄의 용지·인쇄·후가공)과 수량별 가격
+  const detailColumns = detailColumnsOf(preset);
+  const optionsColumn = optionsColumnOf(preset);
   const surcharges = preset.surcharges ?? [];
   // 품목 칸의 이름·예시는 업종 설정에서 (예: 프리랜서 "작업 항목", 행사 "항목")
   const nameColumn = columnOf(preset, "name", "항목");
@@ -314,6 +320,43 @@ export default function DocumentEditor({
             }
             placeholder={placeholderOf(descriptionColumn)}
           />
+          {detailColumns.length > 0 && (
+            <div className="grid gap-2 sm:grid-cols-3">
+              {detailColumns.map((column) => {
+                const value = line.extra[column.key] ?? "";
+                const set = (next: string) =>
+                  changeLine(line.id, {
+                    extra: { ...line.extra, [column.key]: next },
+                  });
+                return (
+                  <label key={column.key} className="block">
+                    <span className="mb-1 block text-xs text-slate-500">
+                      {column.label}
+                    </span>
+                    {column.type === "select" ? (
+                      <SelectWithCustom
+                        label={column.label}
+                        options={column.options ?? []}
+                        value={value}
+                        onChange={set}
+                        emptyLabel="선택 안 함"
+                        placeholder={`${column.label} 직접 입력`}
+                        maxLength={200}
+                      />
+                    ) : (
+                      <input
+                        className={input}
+                        value={value}
+                        maxLength={200}
+                        onChange={(e) => set(e.target.value)}
+                        placeholder={column.placeholder}
+                      />
+                    )}
+                  </label>
+                );
+              })}
+            </div>
+          )}
           {priceParts.length > 0 ? (
             <>
               <div className="grid grid-cols-2 items-start gap-2">
@@ -401,6 +444,14 @@ export default function DocumentEditor({
             )}
             금액 {formatWon(totals.lineAmounts[i])}
           </p>
+          {optionsColumn && (
+            <QuantityOptions
+              label={optionsColumn.label}
+              unit={line.unit}
+              options={line.options ?? []}
+              onChange={(options) => changeLine(line.id, { options })}
+            />
+          )}
         </div>
       </li>
     );
@@ -1002,6 +1053,85 @@ function SelectWithCustom({
           placeholder={placeholder}
           autoFocus={focusInput}
         />
+      )}
+    </div>
+  );
+}
+
+/** 수량별 가격 (최대 5개). 견적서 품목 아래에 "500매 45,000원 · …" 으로 보이고, 합계에는 들어가지 않는다 */
+function QuantityOptions({
+  label: text,
+  unit,
+  options,
+  onChange,
+}: {
+  label: string;
+  unit: string;
+  options: QuantityOptionForm[];
+  onChange: (options: QuantityOptionForm[]) => void;
+}) {
+  const update = (index: number, patch: Partial<QuantityOptionForm>) =>
+    onChange(options.map((o, k) => (k === index ? { ...o, ...patch } : o)));
+
+  return (
+    <div className="rounded-md bg-slate-50 px-3 py-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-slate-500">
+          {text} (선택, 합계에는 들어가지 않음)
+        </span>
+        <button
+          type="button"
+          disabled={options.length >= 5}
+          onClick={() => onChange([...options, { quantity: "", amount: "" }])}
+          className="text-xs font-medium text-pen hover:text-pen-deep disabled:opacity-40"
+        >
+          + 수량 추가
+        </button>
+      </div>
+      {options.length > 0 && (
+        <ul className="mt-2 space-y-2">
+          {options.map((option, k) => (
+            <li
+              key={k}
+              className="grid grid-cols-[1fr_1.4fr_auto] items-center gap-2"
+            >
+              <div className="flex items-center gap-1">
+                <input
+                  className={`${input} text-right`}
+                  aria-label={`${text} ${k + 1} 수량`}
+                  inputMode="decimal"
+                  value={option.quantity}
+                  onChange={(e) => update(k, { quantity: e.target.value })}
+                  placeholder="수량"
+                />
+                {unit && (
+                  <span className="shrink-0 text-sm text-slate-500">
+                    {unit}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                <input
+                  className={`${input} text-right`}
+                  aria-label={`${text} ${k + 1} 금액`}
+                  inputMode="numeric"
+                  value={option.amount}
+                  onChange={(e) =>
+                    update(k, { amount: withCommas(e.target.value) })
+                  }
+                  placeholder="금액"
+                />
+                <span className="shrink-0 text-sm text-slate-500">원</span>
+              </div>
+              <IconButton
+                label={`${text} ${k + 1} 삭제`}
+                onClick={() => onChange(options.filter((_, j) => j !== k))}
+              >
+                ×
+              </IconButton>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

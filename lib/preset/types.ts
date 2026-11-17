@@ -2,7 +2,14 @@
 
 import type { TaxMode } from "@/lib/calc";
 
-export type ColumnType = "text" | "number" | "money" | "select" | "formula";
+export type ColumnType =
+  | "text"
+  | "number"
+  | "money"
+  | "select"
+  | "formula"
+  /** 수량별 가격 [{ quantity, amount }]. 품목 아래에 보여 주기만 하고 합계에는 들어가지 않는다 */
+  | "quantityOptions";
 export type TermFieldType = "text" | "number" | "date" | "select";
 
 export interface PresetColumn {
@@ -17,6 +24,8 @@ export interface PresetColumn {
   placeholder?: string;
   /** "unitPrice" 면 단가를 나눠 받는 열. 단가 = 그 열들의 합 (예: 시공의 자재·노무 단가) */
   partOf?: "unitPrice";
+  /** "detail" 이면 품명 아래 한 줄에 규격과 함께 " · " 로 이어 보여 준다 (예: 인쇄의 용지·인쇄·후가공) */
+  display?: "detail";
 }
 
 export interface PresetTermField {

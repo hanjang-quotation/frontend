@@ -2,6 +2,10 @@ import { formatWon, type Totals } from "@/lib/calc";
 import { formatDate } from "@/lib/format";
 import { Fragment } from "react";
 import {
+  filledOptions,
+  lineDetail,
+  optionsColumnOf,
+  parseNumber,
   pricePartsOf,
   type DocumentForm,
   type LineForm,
@@ -35,6 +39,7 @@ export default function DocumentPreview({
   );
   // 단가 칸: 보통 단가 하나, 시공은 자재·노무 단가
   const priceParts = pricePartsOf(preset);
+  const optionsColumn = optionsColumnOf(preset);
   const priceColumns =
     priceParts.length > 0
       ? priceParts.map((p) => ({ key: p.key, label: p.label }))
@@ -195,9 +200,20 @@ export default function DocumentPreview({
                   </td>
                   <td className="py-2">
                     <p className="text-ink">{line.name || "-"}</p>
-                    {line.description.trim() && (
+                    {lineDetail(line, preset) && (
                       <p className="text-xs text-slate-500">
-                        {line.description}
+                        {lineDetail(line, preset)}
+                      </p>
+                    )}
+                    {optionsColumn && filledOptions(line).length > 0 && (
+                      <p className="text-xs text-slate-500">
+                        {optionsColumn.label}:{" "}
+                        {filledOptions(line)
+                          .map(
+                            (o) =>
+                              `${(parseNumber(o.quantity) ?? 0).toLocaleString("ko-KR")}${line.unit} ${o.amount}원`,
+                          )
+                          .join(" · ")}
                       </p>
                     )}
                   </td>

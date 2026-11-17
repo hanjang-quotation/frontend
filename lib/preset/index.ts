@@ -4,12 +4,14 @@
 import { constructionPreset } from "./construction";
 import { eventPreset } from "./event";
 import { freelancerPreset } from "./freelancer";
+import { printingPreset } from "./printing";
 import type { Preset } from "./types";
 
 export const PRESETS: Record<string, Preset> = {
   [freelancerPreset.code]: freelancerPreset,
   [eventPreset.code]: eventPreset,
   [constructionPreset.code]: constructionPreset,
+  [printingPreset.code]: printingPreset,
 };
 
 /** code 에 맞는 업종 설정. 없으면 undefined */
