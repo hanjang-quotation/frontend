@@ -5,7 +5,7 @@ import { SITE } from "@/lib/site";
 
 /**
  * 사이트 맨 위 메뉴. 안쪽 폭은 그 아래 본문과 왼쪽·오른쪽 끝이 맞도록 레이아웃이 넘겨 준다.
- * 기본값은 소개 화면(marketing)의 폭이다. "새 견적서"는 어느 화면에서나 바로 누를 수 있게 둔다.
+ * 기본값은 소개 화면(marketing)의 폭이다. 새 견적서는 첫 화면과 내 문서에서 시작한다.
  */
 export default function SiteHeader({
   widthClass = "max-w-5xl",
@@ -35,12 +35,6 @@ export default function SiteHeader({
             className="hidden hover:text-ink md:inline"
           >
             내 정보
-          </Link>
-          <Link
-            href="/documents/new"
-            className="hidden rounded-md bg-pen px-3 py-1.5 font-medium text-white hover:bg-pen-deep sm:inline"
-          >
-            새 견적서
           </Link>
           <AuthMenu />
         </nav>
