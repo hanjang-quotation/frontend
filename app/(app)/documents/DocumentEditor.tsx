@@ -138,45 +138,21 @@ export default function DocumentEditor({
             {docNo && <span className="ml-2 tabular-nums">{docNo}</span>}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {documentId !== undefined && status && (
-            <StatusSelect documentId={documentId} initialStatus={status} />
-          )}
-          <Link
-            href="/documents"
-            className="text-sm text-slate-600 hover:text-slate-900"
-          >
-            내 문서
-          </Link>
-          {documentId !== undefined && (
-            // PDF 는 서버에 저장된 내용으로 만들어지므로, 저장하지 않은 수정이 있으면 막는다
-            <a
-              href={`/api/documents/${documentId}/pdf`}
-              onClick={(e) => {
-                if (!dirty) return;
-                e.preventDefault();
-                setSave({
-                  kind: "error",
-                  messages: [
-                    "저장하지 않은 수정 내용이 있습니다. 저장한 뒤 PDF를 내려받아 주세요.",
-                  ],
-                });
-              }}
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              PDF 내려받기
-            </a>
-          )}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={save.kind === "saving"}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
-          >
-            {save.kind === "saving" ? "저장 중…" : "저장"}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={save.kind === "saving"}
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+        >
+          {save.kind === "saving" ? "저장 중…" : "저장"}
+        </button>
       </div>
+
+      {documentId !== undefined && status && (
+        <div className="mt-3">
+          <StatusSelect documentId={documentId} initialStatus={status} />
+        </div>
+      )}
 
       {save.kind === "saved" && (
         <div
@@ -499,6 +475,39 @@ export default function DocumentEditor({
               totals={totals}
               docNo={docNo}
             />
+
+            {/* 문서 작업: PDF 내려받기. 엑셀 내려받기·문서 변환(2차)도 여기에 둔다 */}
+            <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+              <h2 className="text-sm font-semibold text-slate-900">
+                문서 작업
+              </h2>
+              {documentId === undefined ? (
+                <p className="mt-2 text-sm text-slate-500">
+                  저장하면 PDF로 내려받을 수 있습니다.
+                </p>
+              ) : (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {/* PDF 는 서버에 저장된 내용으로 만들어지므로, 저장하지 않은 수정이 있으면 막는다 */}
+                  <a
+                    href={`/api/documents/${documentId}/pdf`}
+                    onClick={(e) => {
+                      if (!dirty) return;
+                      e.preventDefault();
+                      setSave({
+                        kind: "error",
+                        messages: [
+                          "저장하지 않은 수정 내용이 있습니다. 저장한 뒤 PDF를 내려받아 주세요.",
+                        ],
+                      });
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    PDF 내려받기
+                  </a>
+                </div>
+              )}
+            </section>
           </div>
         </div>
       </div>
