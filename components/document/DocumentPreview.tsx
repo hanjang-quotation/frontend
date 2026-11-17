@@ -207,7 +207,7 @@ export default function DocumentPreview({
                     )}
                     {optionsColumn && filledOptions(line).length > 0 && (
                       <p className="text-xs text-slate-500">
-                        {optionsColumn.label}:{" "}
+                        {optionsColumn.label} (참고용, 합계 미포함):{" "}
                         {filledOptions(line)
                           .map(
                             (o) =>

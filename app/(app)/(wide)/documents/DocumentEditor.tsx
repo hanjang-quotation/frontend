@@ -1076,8 +1076,8 @@ function QuantityOptions({
   return (
     <div className="rounded-md bg-slate-50 px-3 py-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-500">
-          {text} (선택, 합계에는 들어가지 않음)
+        <span className="text-xs font-medium text-slate-600">
+          {text} (선택)
         </span>
         <button
           type="button"
@@ -1088,6 +1088,11 @@ function QuantityOptions({
           + 수량 추가
         </button>
       </div>
+      <p className="mt-1 text-xs text-slate-500">
+        다른 수량으로 하면 얼마인지 함께 적어 두면 거래처가 견적서를 보고 수량을
+        고를 수 있습니다. 견적서에는 참고용으로 표시되고 합계에는 들어가지
+        않습니다.
+      </p>
       {options.length > 0 && (
         <ul className="mt-2 space-y-2">
           {options.map((option, k) => (
