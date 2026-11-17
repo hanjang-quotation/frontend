@@ -19,13 +19,27 @@ export function SupplierSection({
   profiles,
   profileId,
   keptSupplier,
+  guest,
   onChange,
 }: {
   profiles: Profile[] | null;
   profileId: number | null | undefined;
   keptSupplier: PartyView | null;
+  /** 로그인하지 않았으면 true. 내 정보는 로그인해야 쓸 수 있다 */
+  guest: boolean;
   onChange: (profileId: number | null) => void;
 }) {
+  if (guest) {
+    return (
+      <Section title="내 정보 (공급자)">
+        <p className="text-sm text-slate-600">
+          로그인하면 내 상호·연락처·입금 계좌를 골라 넣을 수 있습니다. 지금
+          작성하는 내용은 이 브라우저에 임시로 보관되어, 저장할 때 로그인해도
+          그대로 이어집니다.
+        </p>
+      </Section>
+    );
+  }
   return (
     <Section
       title="내 정보 (공급자)"

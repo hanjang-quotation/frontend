@@ -8,14 +8,17 @@ import { Field, Section, inputClass as input } from "@/components/form";
 import { ApiError, api } from "@/lib/api/client";
 import { TAX_MODE_LABELS, formatWon, type TaxMode } from "@/lib/calc";
 import {
+  emptyForm,
   emptyLine,
   formTotals,
+  todayString,
   toRequest,
   unitOptionsOf,
   withCommas,
   type DocumentForm,
   type LineForm,
 } from "@/lib/document/form";
+import { clearDraft, saveDraft } from "@/lib/document/draft";
 import type { DocumentStatus } from "@/lib/document/types";
 import { formatTime } from "@/lib/format";
 import {
@@ -46,9 +49,12 @@ export default function DocumentEditor({
   status,
   savedAt,
   keptSupplier,
+  restoredDraft = false,
 }: {
   preset: Preset;
   initial: DocumentForm;
+  /** 새 문서: 브라우저에 임시 보관해 둔 작성 내용을 불러왔는지 */
+  restoredDraft?: boolean;
   /** 저장된 문서의 공급자 스냅샷. 그 내 정보가 지워져 고를 수 없을 때 "유지"로 보여 준다 */
   keptSupplier?: PartyFields | null;
   /** 저장된 문서를 고칠 때만. 없으면 새 문서 */
@@ -71,6 +77,22 @@ export default function DocumentEditor({
   const [save, setSave] = useState<SaveState>(
     savedAt ? { kind: "saved", at: savedAt } : { kind: "idle" },
   );
+  const [showRestored, setShowRestored] = useState(restoredDraft);
+  const isNew = documentId === undefined;
+
+  /** 빈 새 문서로 되돌린다 (저장하고 넘어갔을 때, "새로 쓰기") */
+  const startFresh = () => {
+    const fresh = emptyForm(preset, todayString());
+    setForm(fresh);
+    setSavedForm(fresh);
+    setNextLineId(Math.max(0, ...fresh.lines.map((l) => l.id)) + 1);
+    setShowRestored(false);
+  };
+
+  // 새 문서는 쓰는 대로 브라우저에 임시 보관한다 (로그인하러 갔다 와도 이어 쓰도록, TECH_SPEC 10.2)
+  useEffect(() => {
+    if (isNew) saveDraft(preset.code, form);
+  }, [isNew, preset.code, form]);
 
   // Next 16(cacheComponents)은 다른 화면으로 가면 이 화면을 없애지 않고 숨겨 두었다가 돌아오면 그대로 보여 준다.
   // 숨겨질 때: 사용자가 띄운 저장 안내는 지우고, 새 문서를 저장해 넘어간 경우에는 입력값도 처음으로 되돌린다.
@@ -86,26 +108,33 @@ export default function DocumentEditor({
         setSave({ kind: "idle" });
       }
       if (resetOnHide.current) {
+        // initial 이 아니라 빈 문서로: initial 은 임시 보관본일 수 있다
         resetOnHide.current = false;
-        setForm(initial);
-        setSavedForm(initial);
-        setNextLineId(Math.max(0, ...initial.lines.map((l) => l.id)) + 1);
+        startFresh();
         setTab("edit");
       }
     };
-  }, [initial]);
+    // startFresh 는 preset 만 쓴다. 정리 함수를 화면이 숨겨질 때만 부르려고 의존값을 preset 으로 둔다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preset]);
 
   // 내 정보·거래처 목록. 화면이 다시 보일 때마다 새로 불러온다 (설정 화면에서 추가하고 돌아온 경우).
   // 새 문서는 이때 기본 내 정보와 그 세금 방식을 고른다 (profileId 가 아직 undefined 일 때만)
+  // 로그인하지 않았으면(401) guest: 내 정보 칸에 "로그인하면 고를 수 있다"고 안내한다
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [clients, setClients] = useState<Client[] | null>(null);
+  const [guest, setGuest] = useState(false);
   useEffect(() => {
     api.profiles.list().then(
       (list) => {
+        setGuest(false);
         setProfiles(list);
         setForm((prev) => withDefaultSupplier(prev, list, preset));
       },
-      () => setProfiles([]),
+      (e) => {
+        setGuest(e instanceof ApiError && e.status === 401);
+        setProfiles([]);
+      },
     );
     api.clients.list().then(setClients, () => setClients([]));
   }, [preset]);
@@ -165,6 +194,7 @@ export default function DocumentEditor({
           presetCode: preset.code,
         });
         // 수정 화면으로 넘어가서 저장 안내를 띄운다 (EditDocument 가 ?saved 를 읽는다)
+        clearDraft();
         resetOnHide.current = true;
         router.replace(`/documents/${created.id}?saved=1`);
         return;
@@ -173,6 +203,20 @@ export default function DocumentEditor({
       setSavedForm(form);
       setSave({ kind: "saved", at: formatTime(updated.updatedAt) });
     } catch (e) {
+      // 로그인·약관 동의가 필요하면 그 화면으로 보낸다. 새 문서는 임시 보관돼 있어 돌아오면 이어 쓸 수 있다
+      if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
+        const next = encodeURIComponent(window.location.pathname);
+        if (e.status === 401) {
+          setSave({ kind: "idle" });
+          router.push(`/login?next=${next}`);
+          return;
+        }
+        if (e.body.code === "AGREEMENT_REQUIRED") {
+          setSave({ kind: "idle" });
+          router.push(`/welcome?next=${next}`);
+          return;
+        }
+      }
       setSave(saveError(e));
     }
   }
@@ -203,6 +247,29 @@ export default function DocumentEditor({
           {save.kind === "saving" ? "저장 중…" : "저장"}
         </button>
       </div>
+
+      {showRestored && save.kind === "idle" && (
+        <div
+          role="status"
+          className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-md bg-blue-50 px-4 py-3 text-sm text-blue-800"
+        >
+          <span>
+            작성하던 견적서를 불러왔습니다. 확인하고 저장을 눌러 주세요.
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              if (window.confirm("작성하던 내용을 지우고 새로 쓸까요?")) {
+                clearDraft();
+                startFresh();
+              }
+            }}
+            className="font-medium underline"
+          >
+            새로 쓰기
+          </button>
+        </div>
+      )}
 
       {save.kind === "saved" && (
         <div
@@ -263,6 +330,7 @@ export default function DocumentEditor({
             profiles={profiles}
             profileId={form.profileId}
             keptSupplier={keptSupplier ? partyView(keptSupplier) : null}
+            guest={guest}
             onChange={(profileId) => change({ profileId })}
           />
 

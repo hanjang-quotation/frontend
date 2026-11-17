@@ -1,3 +1,4 @@
+import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 
 // 견적서 작성·수정 화면의 틀. 입력과 미리보기를 나란히 두므로 폭을 넓게 쓴다. 메뉴 줄도 같은 폭으로 맞춘다.
@@ -15,6 +16,7 @@ export default function WideLayout({
       <main className={`mx-auto w-full ${WIDTH} flex-1 px-4 pt-4 pb-8`}>
         {children}
       </main>
+      <SiteFooter />
     </>
   );
 }

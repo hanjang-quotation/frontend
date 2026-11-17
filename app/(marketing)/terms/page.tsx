@@ -1,0 +1,119 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Article, LegalPage } from "@/components/LegalPage";
+import { SITE } from "@/lib/site";
+
+export const metadata: Metadata = { title: "이용약관" };
+
+// 이용약관 초안. 출시 전에 운영자 정보(lib/site.ts)를 채우고 내용을 검토한다.
+// 내용을 바꾸면 SITE.policyDate 와 백엔드 Agreements.VERSION 을 함께 올려 다시 동의를 받는다.
+export default function TermsPage() {
+  return (
+    <LegalPage title="이용약관" effectiveDate={SITE.policyDate}>
+      <Article title="제1조 (목적)">
+        <p>
+          이 약관은 {SITE.operator}(이하 &ldquo;운영자&rdquo;)가 제공하는{" "}
+          {SITE.name}(이하 &ldquo;서비스&rdquo;)를 이용하는 데 필요한 운영자와
+          회원의 권리·의무와 책임을 정합니다.
+        </p>
+      </Article>
+
+      <Article title="제2조 (서비스 내용)">
+        <p>서비스는 다음 기능을 제공합니다.</p>
+        <ul>
+          <li>업종별 항목으로 견적서 작성, 합계·세금의 자동 계산</li>
+          <li>작성한 견적서의 저장·수정·삭제와 PDF 내려받기</li>
+          <li>내 정보(공급자)와 거래처 정보의 저장</li>
+        </ul>
+        <p>
+          서비스는 지금 무료로 제공합니다. 유료 기능을 추가하게 되면 그 내용과
+          요금을 미리 알리고, 회원이 따로 동의한 경우에만 요금을 받습니다.
+        </p>
+      </Article>
+
+      <Article title="제3조 (회원 가입)">
+        <ol>
+          <li>
+            회원 가입은 카카오 또는 구글 계정으로 로그인하고, 이 약관과 개인정보
+            수집·이용에 동의하면 이루어집니다.
+          </li>
+          <li>
+            서비스는 비밀번호를 받거나 저장하지 않습니다. 로그인은 카카오·구글이
+            확인합니다.
+          </li>
+        </ol>
+      </Article>
+
+      <Article title="제4조 (계산 결과에 대한 안내)">
+        <p>
+          서비스가 보여 주는 합계, 부가세, 3.3% 공제액 등은 입력한 값으로 계산한
+          참고용 금액입니다. 실제 세액이나 신고 금액은 다를 수 있으며, 회원은
+          거래처에 보내기 전에 금액을 직접 확인해야 합니다. 운영자는 계산 결과를
+          그대로 써서 생긴 손해에 대해 고의 또는 중대한 과실이 없는 한 책임지지
+          않습니다.
+        </p>
+      </Article>
+
+      <Article title="제5조 (회원의 의무)">
+        <ol>
+          <li>
+            회원은 거래처 담당자의 이름·연락처 같은 다른 사람의 개인정보를
+            입력할 때, 견적서 작성에 필요한 만큼만 입력하고 관련 법령을 지켜야
+            합니다.
+          </li>
+          <li>
+            회원은 다른 사람의 계정을 쓰거나, 서비스를 법령에 어긋나는 목적으로
+            쓰거나, 서비스의 정상적인 운영을 방해해서는 안 됩니다.
+          </li>
+          <li>
+            회원이 작성한 견적서의 내용과 그 결과에 대한 책임은 회원에게
+            있습니다.
+          </li>
+        </ol>
+      </Article>
+
+      <Article title="제6조 (서비스의 변경과 중단)">
+        <p>
+          운영자는 서비스를 개선하거나 설비를 점검하기 위해 서비스의 일부 또는
+          전부를 바꾸거나 잠시 멈출 수 있습니다. 회원에게 불리한 변경이나 서비스
+          종료는 미리 서비스 화면에 알리며, 서비스를 끝낼 때는 회원이 자료를
+          내려받을 수 있도록 충분한 기간을 둡니다.
+        </p>
+      </Article>
+
+      <Article title="제7조 (회원 탈퇴)">
+        <p>
+          회원은 언제든지 내 정보 화면의 &ldquo;회원 탈퇴&rdquo;로 탈퇴할 수
+          있습니다. 탈퇴하면 회원 정보와 회원이 저장한 내 정보·거래처·견적서가
+          바로 삭제되며 되돌릴 수 없습니다. 자세한 내용은{" "}
+          <Link href="/privacy" className="underline">
+            개인정보처리방침
+          </Link>
+          을 따릅니다.
+        </p>
+      </Article>
+
+      <Article title="제8조 (약관의 변경)">
+        <p>
+          운영자는 관련 법령에 어긋나지 않는 범위에서 이 약관을 바꿀 수
+          있습니다. 약관을 바꾸면 시행일과 바뀐 내용을 시행 7일 전(회원에게
+          불리하면 30일 전)부터 서비스 화면에 알리고, 시행일 이후 처음 로그인할
+          때 다시 동의를 받습니다.
+        </p>
+      </Article>
+
+      <Article title="제9조 (준거법과 관할)">
+        <p>
+          이 약관은 대한민국 법을 따르며, 서비스 이용과 관련한 분쟁은
+          민사소송법에 따른 관할 법원에서 해결합니다.
+        </p>
+      </Article>
+
+      <Article title="문의">
+        <p>
+          운영자 {SITE.operator} · {SITE.email}
+        </p>
+      </Article>
+    </LegalPage>
+  );
+}

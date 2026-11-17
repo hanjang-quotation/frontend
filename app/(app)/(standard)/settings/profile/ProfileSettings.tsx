@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Field, inputClass } from "@/components/form";
 import { api } from "@/lib/api/client";
 import { errorMessages, loadError } from "@/lib/api/errors";
+import { notifyAuthChanged } from "@/lib/auth";
 import { TAX_MODE_LABELS, type TaxMode } from "@/lib/calc";
 import { formatBusinessNo, formatPhone } from "@/lib/format";
 import {
@@ -270,7 +272,89 @@ export default function ProfileSettings() {
           })}
         </ul>
       )}
+
+      {list.kind === "loaded" && <Withdraw />}
     </div>
+  );
+}
+
+/**
+ * 회원 탈퇴. 되돌릴 수 없으므로 "탈퇴"를 직접 입력해야 진행한다.
+ * 사용자·내 정보·거래처·견적서가 모두 지워진다 (TECH_SPEC 15장).
+ */
+function Withdraw() {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function withdraw() {
+    setBusy(true);
+    setError(null);
+    try {
+      await api.withdraw();
+      notifyAuthChanged();
+      router.replace("/");
+    } catch (e) {
+      setError(errorMessages(e, "탈퇴하지 못했습니다.").join(" "));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="mt-16 border-t border-slate-200 pt-6 text-sm">
+      {!open ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="text-slate-500 underline hover:text-red-600"
+        >
+          회원 탈퇴
+        </button>
+      ) : (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-5">
+          <h2 className="font-semibold text-red-800">회원 탈퇴</h2>
+          <p className="mt-2 text-red-700">
+            탈퇴하면 계정과 함께 내 정보·거래처·저장한 견적서가{" "}
+            <strong>모두 바로 삭제</strong>되며 되돌릴 수 없습니다. 필요한
+            견적서는 먼저 PDF로 내려받아 두세요.
+          </p>
+          <label className="mt-4 block">
+            <span className="text-xs text-red-800">
+              계속하려면 &ldquo;탈퇴&rdquo;를 입력하세요
+            </span>
+            <input
+              className={`${inputClass} mt-1 max-w-40`}
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+            />
+          </label>
+          {error && <p className="mt-2 text-red-700">{error}</p>}
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              disabled={confirmText.trim() !== "탈퇴" || busy}
+              onClick={withdraw}
+              className="rounded-md bg-red-600 px-3 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-40"
+            >
+              {busy ? "탈퇴하는 중…" : "탈퇴하기"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setConfirmText("");
+                setError(null);
+              }}
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 

@@ -12,6 +12,17 @@ export default function HomePage() {
           업종을 고르면 필요한 항목이 미리 준비됩니다. 작성하고 PDF로
           내려받으세요.
         </p>
+        <div className="mt-8 flex flex-col items-center gap-2">
+          <Link
+            href="/documents/new?preset=freelancer"
+            className="rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
+          >
+            프리랜서 견적서 바로 작성하기
+          </Link>
+          <p className="text-sm text-slate-500">
+            가입 없이 시작하고, 저장할 때만 카카오·구글로 로그인합니다.
+          </p>
+        </div>
       </section>
 
       <section className="mt-12 grid gap-4 sm:grid-cols-2">

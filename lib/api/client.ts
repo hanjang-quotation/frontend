@@ -40,6 +40,8 @@ export interface Me {
   name: string | null;
   provider: "KAKAO" | "GOOGLE";
   plan: string;
+  /** 지금 버전의 이용약관·개인정보 수집·이용에 동의했는지. false 면 동의 화면(/welcome)으로 보낸다 */
+  agreed: boolean;
 }
 
 // 백엔드가 내려 준 CSRF 토큰 쿠키. 값을 바꾸는 요청에 X-XSRF-TOKEN 헤더로 돌려보낸다 (TECH_SPEC 11장)
@@ -105,6 +107,14 @@ export const api = {
     }
   },
   logout: () => apiFetch<void>("/logout", { method: "POST" }),
+  /** 이용약관·개인정보 수집·이용 동의 (둘 다 필수) */
+  agree: () =>
+    apiFetch<void>("/me/agreements", {
+      method: "POST",
+      body: JSON.stringify({ terms: true, privacy: true }),
+    }),
+  /** 회원 탈퇴. 내 정보·거래처·문서가 모두 지워진다 */
+  withdraw: () => apiFetch<void>("/me", { method: "DELETE" }),
 
   /** 내 정보. 기본이 맨 앞 */
   profiles: {

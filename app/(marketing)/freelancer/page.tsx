@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import DocumentPreview from "@/components/document/DocumentPreview";
+import { formTotals } from "@/lib/document/form";
 import { freelancerPreset } from "@/lib/preset/freelancer";
+import {
+  freelancerSampleForm,
+  freelancerSampleSupplier,
+} from "@/lib/preset/freelancerSample";
 
 export const metadata: Metadata = {
   title: "프리랜서 견적서 양식",
@@ -37,14 +43,34 @@ export default function FreelancerLandingPage() {
         계산됩니다.
       </p>
 
-      <div className="mt-8">
+      <div className="mt-8 flex flex-wrap items-center gap-3">
         <Link
           href="/documents/new?preset=freelancer"
           className="inline-block rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
         >
-          견적서 작성하기
+          가입 없이 바로 작성하기
         </Link>
+        <span className="text-sm text-slate-500">
+          저장하거나 PDF로 받을 때만 카카오·구글로 로그인합니다.
+        </span>
       </div>
+
+      <section className="mt-12">
+        <h2 className="font-semibold text-slate-900">이렇게 만들어집니다</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          아래는 예시입니다. 작성 화면에서 입력하는 대로 이 모양이 바로 바뀌고,
+          같은 모양으로 PDF를 내려받습니다.
+        </p>
+        <div className="mt-4">
+          <DocumentPreview
+            preset={freelancerPreset}
+            form={freelancerSampleForm}
+            totals={formTotals(freelancerSampleForm)}
+            docNo="EST-2026-0001"
+            supplier={freelancerSampleSupplier}
+          />
+        </div>
+      </section>
 
       <ul className="mt-12 space-y-6">
         {points.map((p) => (
