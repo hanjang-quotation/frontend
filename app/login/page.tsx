@@ -21,17 +21,6 @@ export default function LoginPage() {
           <LoginError />
         </Suspense>
         <LoginButtons />
-        <p className="mt-4 text-xs text-slate-400">
-          처음이면 로그인할 때 가입되며,{" "}
-          <Link href="/terms" className="underline">
-            이용약관
-          </Link>
-          과{" "}
-          <Link href="/privacy" className="underline">
-            개인정보처리방침
-          </Link>
-          에 동의하는 화면이 나옵니다.
-        </p>
         <Link
           href="/"
           className="mt-6 inline-block text-xs text-slate-500 hover:text-slate-700"
