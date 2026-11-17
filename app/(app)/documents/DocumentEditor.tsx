@@ -211,7 +211,7 @@ export default function DocumentEditor({
                   onChange={(e) =>
                     changeClient({ phone: formatPhone(e.target.value) })
                   }
-                  placeholder="예: 01012345678"
+                  placeholder="예: 010-1234-5678"
                 />
               </Field>
               <Field label="이메일">
@@ -309,7 +309,7 @@ export default function DocumentEditor({
                       }
                       placeholder="작업 범위 (선택)"
                     />
-                    <div className="grid grid-cols-[1fr_1fr_2fr] gap-2">
+                    <div className="grid grid-cols-[1fr_1fr_2fr] items-start gap-2">
                       <input
                         className={`${input} text-right`}
                         aria-label="수량"
@@ -319,10 +319,13 @@ export default function DocumentEditor({
                           changeLine(line.id, { quantity: e.target.value })
                         }
                       />
-                      <UnitSelect
+                      <SelectWithCustom
+                        label="단위"
                         options={unitOptions}
                         value={line.unit}
                         onChange={(unit) => changeLine(line.id, { unit })}
+                        placeholder="예: 컷"
+                        maxLength={20}
                       />
                       <input
                         className={`${input} text-right`}
@@ -337,19 +340,6 @@ export default function DocumentEditor({
                         placeholder="단가"
                       />
                     </div>
-                    {isCustomUnit(unitOptions, line.unit) && (
-                      <input
-                        className={input}
-                        aria-label="단위 직접 입력"
-                        maxLength={20}
-                        value={line.unit}
-                        onChange={(e) =>
-                          changeLine(line.id, { unit: e.target.value })
-                        }
-                        placeholder="단위 직접 입력 (예: 컷, 개, 회)"
-                        autoFocus={line.unit === ""}
-                      />
-                    )}
                     <p className="text-right text-sm tabular-nums text-slate-700">
                       금액 {formatWon(totals.lineAmounts[i])}
                     </p>
@@ -372,16 +362,15 @@ export default function DocumentEditor({
                 {preset.termFields.map((field) => (
                   <Field key={field.key} label={field.label}>
                     {field.type === "select" ? (
-                      <select
-                        className={input}
+                      <SelectWithCustom
+                        label={field.label}
+                        options={field.options ?? []}
                         value={form.terms[field.key] ?? ""}
-                        onChange={(e) => changeTerm(field.key, e.target.value)}
-                      >
-                        <option value="">선택 안 함</option>
-                        {field.options?.map((o) => (
-                          <option key={o}>{o}</option>
-                        ))}
-                      </select>
+                        onChange={(value) => changeTerm(field.key, value)}
+                        emptyLabel="선택 안 함"
+                        placeholder={`${field.label} 직접 입력`}
+                        maxLength={100}
+                      />
                     ) : (
                       <input
                         className={input}
@@ -490,41 +479,71 @@ function saveError(e: unknown): SaveState {
   };
 }
 
-/** 단위 목록에 없는 값(빈 값 포함)이면 사용자가 직접 입력하는 중이다 */
-function isCustomUnit(options: string[], unit: string): boolean {
-  return !options.includes(unit);
-}
-
-const CUSTOM_UNIT = "__custom__";
+const CUSTOM = "__custom__";
 
 /**
- * 업종 설정의 단위 목록 + "직접 입력". 직접 입력을 고르면 단위를 비우고,
- * 그 아래에 나오는 입력란에 적은 값이 그대로 단위가 된다.
+ * 업종 설정의 select 칸(단위, 결제 조건 등) — 목록 + "직접 입력".
+ * 직접 입력을 고르면 아래에 입력란이 나오고, 거기 적은 값이 그대로 저장된다.
+ * 목록에 없는 값으로 저장된 문서를 열면 직접 입력 상태로 시작한다.
+ *
+ * @param emptyLabel 있으면 빈 값을 고를 수 있다 (예: "선택 안 함")
  */
-function UnitSelect({
+function SelectWithCustom({
+  label: text,
   options,
   value,
   onChange,
+  emptyLabel,
+  placeholder,
+  maxLength,
 }: {
+  label: string;
   options: string[];
   value: string;
-  onChange: (unit: string) => void;
+  onChange: (value: string) => void;
+  emptyLabel?: string;
+  placeholder: string;
+  maxLength: number;
 }) {
-  const custom = isCustomUnit(options, value);
+  // 빈 값은 "선택 안 함"과 "직접 입력 직후"가 같아 보이므로 직접 입력 중인지 따로 기억한다
+  const [custom, setCustom] = useState(
+    () =>
+      !options.includes(value) && (value !== "" || emptyLabel === undefined),
+  );
+  // 사용자가 직접 입력을 고른 순간에만 입력란으로 커서를 옮긴다
+  const [focusInput, setFocusInput] = useState(false);
+
   return (
-    <select
-      className={input}
-      aria-label="단위"
-      value={custom ? CUSTOM_UNIT : value}
-      onChange={(e) =>
-        onChange(e.target.value === CUSTOM_UNIT ? "" : e.target.value)
-      }
-    >
-      {options.map((u) => (
-        <option key={u}>{u}</option>
-      ))}
-      <option value={CUSTOM_UNIT}>직접 입력</option>
-    </select>
+    <div className="space-y-2">
+      <select
+        className={input}
+        aria-label={text}
+        value={custom ? CUSTOM : value}
+        onChange={(e) => {
+          const next = e.target.value;
+          setCustom(next === CUSTOM);
+          setFocusInput(next === CUSTOM);
+          onChange(next === CUSTOM ? "" : next);
+        }}
+      >
+        {emptyLabel !== undefined && <option value="">{emptyLabel}</option>}
+        {options.map((o) => (
+          <option key={o}>{o}</option>
+        ))}
+        <option value={CUSTOM}>직접 입력</option>
+      </select>
+      {custom && (
+        <input
+          className={input}
+          aria-label={`${text} 직접 입력`}
+          maxLength={maxLength}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoFocus={focusInput}
+        />
+      )}
+    </div>
   );
 }
 
