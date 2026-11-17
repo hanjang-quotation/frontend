@@ -6,6 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import DocumentPreview from "@/components/document/DocumentPreview";
 import { Field, Section, inputClass as input } from "@/components/form";
 import { ApiError, api } from "@/lib/api/client";
+import { errorMessages } from "@/lib/api/errors";
 import { TAX_MODE_LABELS, formatWon, type TaxMode } from "@/lib/calc";
 import {
   emptyForm,
@@ -28,6 +29,11 @@ import {
 import { clearDraft, saveDraft } from "@/lib/document/draft";
 import type { DocumentStatus } from "@/lib/document/types";
 import { formatTime } from "@/lib/format";
+import {
+  itemRequestFromLine,
+  linePatchFromItem,
+  type SavedItem,
+} from "@/lib/item";
 import {
   partyView,
   type Client,
@@ -84,6 +90,16 @@ export default function DocumentEditor({
     Math.max(0, ...initial.groups.map((g) => g.id)) + 1,
   );
   const [tab, setTab] = useState<"edit" | "preview">("edit");
+
+  // 자주 쓰는 품목 (이 업종 것). 불러오지 못했으면(로그인 전 등) null 이고 버튼을 숨긴다
+  const [savedItems, setSavedItems] = useState<SavedItem[] | null>(null);
+  /** 불러오기 목록을 연 행 */
+  const [pickerLine, setPickerLine] = useState<number | null>(null);
+  /** 행 아래에 잠깐 보여 주는 안내 (저장했음, 오류 등) */
+  const [itemNotice, setItemNotice] = useState<{
+    lineId: number;
+    text: string;
+  } | null>(null);
   const [save, setSave] = useState<SaveState>(
     savedAt ? { kind: "saved", at: savedAt } : { kind: "idle" },
   );
@@ -114,6 +130,9 @@ export default function DocumentEditor({
   const resetOnHide = useRef(false);
   useLayoutEffect(() => {
     return () => {
+      // 자주 쓰는 품목 안내·불러오기 목록은 화면을 떠나면 닫는다 (처음 열 때 지워져도 비어 있어 괜찮다)
+      setItemNotice(null);
+      setPickerLine(null);
       if (clearStatusOnHide.current) {
         clearStatusOnHide.current = false;
         setSave({ kind: "idle" });
@@ -135,6 +154,46 @@ export default function DocumentEditor({
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [clients, setClients] = useState<Client[] | null>(null);
   const [guest, setGuest] = useState(false);
+
+  /** 이 행을 자주 쓰는 품목으로 저장. 같은 이름이 있으면 물어보고 덮어쓴다 */
+  async function saveItem(line: LineForm) {
+    const name = line.name.trim();
+    if (name === "") {
+      setItemNotice({
+        lineId: line.id,
+        text: "품목 이름을 먼저 입력해 주세요.",
+      });
+      return;
+    }
+    const existing = savedItems?.find((item) => item.name === name);
+    if (
+      existing &&
+      !window.confirm(
+        `자주 쓰는 품목에 '${name}'이(가) 이미 있습니다. 지금 내용으로 바꿀까요?`,
+      )
+    ) {
+      return;
+    }
+    try {
+      const body = itemRequestFromLine(line, preset);
+      const saved = existing
+        ? await api.items.update(existing.id, body)
+        : await api.items.create(body);
+      setSavedItems((prev) =>
+        [...(prev ?? []).filter((item) => item.id !== saved.id), saved].sort(
+          (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : a.id - b.id),
+        ),
+      );
+      setItemNotice({
+        lineId: line.id,
+        text: existing
+          ? "자주 쓰는 품목을 지금 내용으로 바꿨습니다."
+          : "자주 쓰는 품목에 저장했습니다. 다른 견적서에서 불러올 수 있습니다.",
+      });
+    } catch (e) {
+      setItemNotice({ lineId: line.id, text: errorMessages(e).join(" ") });
+    }
+  }
   useEffect(() => {
     api.profiles.list().then(
       (list) => {
@@ -148,6 +207,7 @@ export default function DocumentEditor({
       },
     );
     api.clients.list().then(setClients, () => setClients([]));
+    api.items.list(preset.code).then(setSavedItems, () => setSavedItems(null));
   }, [preset]);
 
   const totals = formTotals(form, preset);
@@ -278,7 +338,31 @@ export default function DocumentEditor({
     return (
       <li key={line.id} className="rounded-lg border border-rule bg-paper p-3">
         <div className="flex items-center justify-between text-xs text-slate-500">
-          <span>{n + 1}번째 품목</span>
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>{n + 1}번째 품목</span>
+            {/* 자주 쓰는 품목: 로그인했을 때만 */}
+            {savedItems !== null && !guest && (
+              <>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPickerLine(pickerLine === line.id ? null : line.id)
+                  }
+                  className="font-medium text-pen hover:text-pen-deep"
+                  aria-expanded={pickerLine === line.id}
+                >
+                  불러오기
+                </button>
+                <button
+                  type="button"
+                  onClick={() => saveItem(line)}
+                  className="font-medium text-pen hover:text-pen-deep"
+                >
+                  자주 쓰는 품목에 저장
+                </button>
+              </>
+            )}
+          </span>
           <span className="flex gap-1">
             <IconButton
               label="위로"
@@ -303,6 +387,22 @@ export default function DocumentEditor({
             </IconButton>
           </span>
         </div>
+        {itemNotice?.lineId === line.id && (
+          <p role="status" className="mt-1 text-xs text-pen-deep">
+            {itemNotice.text}
+          </p>
+        )}
+        {pickerLine === line.id && savedItems && (
+          <ItemPicker
+            items={savedItems}
+            onPick={(item) => {
+              changeLine(line.id, linePatchFromItem(item, preset));
+              setPickerLine(null);
+              setItemNotice(null);
+            }}
+            onClose={() => setPickerLine(null)}
+          />
+        )}
         <div className="mt-2 space-y-2">
           <input
             className={input}
@@ -1053,6 +1153,83 @@ function SelectWithCustom({
           placeholder={placeholder}
           autoFocus={focusInput}
         />
+      )}
+    </div>
+  );
+}
+
+/** 자주 쓰는 품목에서 고르기. 이름으로 거른다 (이 업종 것만, 최대 200개를 이미 불러와 둔다) */
+function ItemPicker({
+  items,
+  onPick,
+  onClose,
+}: {
+  items: SavedItem[];
+  onPick: (item: SavedItem) => void;
+  onClose: () => void;
+}) {
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const shown = q
+    ? items.filter((item) => item.name.toLowerCase().includes(q))
+    : items;
+
+  return (
+    <div className="mt-2 rounded-md border border-rule bg-slate-50 p-2">
+      <div className="flex items-center gap-2">
+        <input
+          className={input}
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="품목 이름으로 찾기"
+          aria-label="자주 쓰는 품목 찾기"
+          autoFocus
+        />
+        <button
+          type="button"
+          onClick={onClose}
+          className="shrink-0 text-sm text-slate-500 hover:text-ink"
+        >
+          닫기
+        </button>
+      </div>
+      {items.length === 0 ? (
+        <p className="px-1 py-3 text-sm text-slate-500">
+          아직 저장한 품목이 없습니다. 품목을 적고 &ldquo;자주 쓰는 품목에
+          저장&rdquo;을 누르면 여기에 나옵니다.
+        </p>
+      ) : shown.length === 0 ? (
+        <p className="px-1 py-3 text-sm text-slate-500">
+          &ldquo;{query.trim()}&rdquo;이(가) 들어간 품목이 없습니다.
+        </p>
+      ) : (
+        <ul className="mt-2 max-h-60 divide-y divide-rule overflow-y-auto rounded border border-rule bg-paper">
+          {shown.map((item) => (
+            <li key={item.id}>
+              <button
+                type="button"
+                onClick={() => onPick(item)}
+                className="flex w-full items-baseline justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-pen-soft"
+              >
+                <span className="min-w-0">
+                  <span className="text-ink">{item.name}</span>
+                  {item.description && (
+                    <span className="ml-2 text-xs text-slate-500">
+                      {item.description}
+                    </span>
+                  )}
+                </span>
+                <span className="shrink-0 tabular-nums text-slate-600">
+                  {formatWon(item.unitPrice)}
+                  {item.unit && (
+                    <span className="text-slate-400"> / {item.unit}</span>
+                  )}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

@@ -31,6 +31,12 @@ export default function SiteHeader({
             거래처
           </Link>
           <Link
+            href="/settings/items"
+            className="hidden hover:text-ink md:inline"
+          >
+            자주 쓰는 품목
+          </Link>
+          <Link
             href="/settings/profile"
             className="hidden hover:text-ink md:inline"
           >

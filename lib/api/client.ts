@@ -14,6 +14,7 @@ import type {
   Profile,
   ProfileRequest,
 } from "@/lib/party/types";
+import type { SavedItem, SavedItemRequest } from "@/lib/item";
 import type { Preset, PresetSummary } from "@/lib/preset/types";
 
 /** 백엔드 오류 응답 형식 (TECH_SPEC 9장) */
@@ -173,6 +174,29 @@ export const api = {
       }),
     remove: (id: number) =>
       apiFetch<void>(`/clients/${id}`, { method: "DELETE" }),
+  },
+
+  /** 자주 쓰는 품목. presetCode 가 없으면 모든 업종 */
+  items: {
+    list: (presetCode?: string, q?: string) => {
+      const query = new URLSearchParams();
+      if (presetCode) query.set("preset", presetCode);
+      if (q) query.set("q", q);
+      const qs = query.toString();
+      return apiFetch<SavedItem[]>(`/items${qs ? `?${qs}` : ""}`);
+    },
+    create: (body: SavedItemRequest) =>
+      apiFetch<SavedItem>("/items", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: SavedItemRequest) =>
+      apiFetch<SavedItem>(`/items/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      apiFetch<void>(`/items/${id}`, { method: "DELETE" }),
   },
 
   documents: {
