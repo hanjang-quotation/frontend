@@ -7,6 +7,7 @@ import { Field, inputClass } from "@/components/form";
 import { api } from "@/lib/api/client";
 import { errorMessages, loadError } from "@/lib/api/errors";
 import { notifyAuthChanged } from "@/lib/auth";
+import LinkedLogins from "./LinkedLogins";
 import { TAX_MODE_LABELS, type TaxMode } from "@/lib/calc";
 import { formatBusinessNo, formatPhone } from "@/lib/format";
 import {
@@ -273,6 +274,7 @@ export default function ProfileSettings() {
         </ul>
       )}
 
+      {list.kind === "loaded" && <LinkedLogins />}
       {list.kind === "loaded" && <Withdraw />}
     </div>
   );

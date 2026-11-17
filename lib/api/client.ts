@@ -44,6 +44,16 @@ export interface Me {
   agreed: boolean;
 }
 
+export type Provider = "KAKAO" | "GOOGLE";
+
+/** 내 계정에 연결된 소셜 로그인 하나 */
+export interface Identity {
+  provider: Provider;
+  email: string | null;
+  name: string | null;
+  linkedAt: string;
+}
+
 // 백엔드가 내려 준 CSRF 토큰 쿠키. 값을 바꾸는 요청에 X-XSRF-TOKEN 헤더로 돌려보낸다 (TECH_SPEC 11장)
 function readCsrfToken(): string | undefined {
   if (typeof document === "undefined") return undefined;
@@ -115,6 +125,20 @@ export const api = {
     }),
   /** 회원 탈퇴. 내 정보·거래처·문서가 모두 지워진다 */
   withdraw: () => apiFetch<void>("/me", { method: "DELETE" }),
+
+  /** 내 계정에 연결된 소셜 로그인 */
+  identities: {
+    list: () => apiFetch<Identity[]>("/me/identities"),
+    /** 연결 시작 표시만 남긴다. 이어서 소셜 로그인 주소로 보내야 연결된다 (10분 안에) */
+    startLink: (provider: Provider) =>
+      apiFetch<void>(`/me/identities/${provider.toLowerCase()}/link`, {
+        method: "POST",
+      }),
+    unlink: (provider: Provider) =>
+      apiFetch<void>(`/me/identities/${provider.toLowerCase()}`, {
+        method: "DELETE",
+      }),
+  },
 
   /** 내 정보. 기본이 맨 앞 */
   profiles: {

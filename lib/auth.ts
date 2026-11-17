@@ -30,7 +30,9 @@ export function rememberReturnPath(path: string): void {
  * 이 브라우저에서 마지막으로 로그인에 성공한 소셜 로그인. 카카오와 구글은 서로 다른 계정이라,
  * 로그인 화면에 "최근에 쓴 로그인"으로 표시해 다른 쪽으로 새로 가입하는 일을 줄인다.
  */
-export type Provider = "KAKAO" | "GOOGLE";
+import type { Provider } from "@/lib/api/client";
+
+export type { Provider };
 
 const LAST_PROVIDER_KEY = "quotation:last-login-provider";
 const LAST_PROVIDER_CHANGED = "quotation:last-provider-changed";
