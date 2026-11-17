@@ -128,15 +128,20 @@ export default function DocumentEditor({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <h1 className="text-xl font-bold text-slate-900">
+        {documentId === undefined ? "새 견적서" : "견적서 수정"}
+      </h1>
+      <p className="mt-0.5 text-sm text-slate-500">
+        {preset.name}
+        {docNo && <span className="ml-2 tabular-nums">{docNo}</span>}
+      </p>
+
+      {/* 왼쪽 상태 선택(저장된 문서만), 오른쪽 저장 버튼 */}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">
-            {documentId === undefined ? "새 견적서" : "견적서 수정"}
-          </h1>
-          <p className="mt-0.5 text-sm text-slate-500">
-            {preset.name}
-            {docNo && <span className="ml-2 tabular-nums">{docNo}</span>}
-          </p>
+          {documentId !== undefined && status && (
+            <StatusSelect documentId={documentId} initialStatus={status} />
+          )}
         </div>
         <button
           type="button"
@@ -147,12 +152,6 @@ export default function DocumentEditor({
           {save.kind === "saving" ? "저장 중…" : "저장"}
         </button>
       </div>
-
-      {documentId !== undefined && status && (
-        <div className="mt-3">
-          <StatusSelect documentId={documentId} initialStatus={status} />
-        </div>
-      )}
 
       {save.kind === "saved" && (
         <div
