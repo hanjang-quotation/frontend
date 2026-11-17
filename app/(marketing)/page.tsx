@@ -27,7 +27,7 @@ export default function HomePage() {
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
             <Link
-              href="/documents/new?preset=freelancer"
+              href="/documents/new"
               className="rounded-md bg-pen px-5 py-3 font-medium text-white hover:bg-pen-deep"
             >
               견적서 쓰기
@@ -67,8 +67,8 @@ export default function HomePage() {
           업종별 양식
         </h2>
         <p className="mt-1 text-sm text-slate-500">
-          업종마다 필요한 칸과 계산 방식이 다릅니다. 지금은 프리랜서 양식을 쓸
-          수 있고, 나머지는 만들고 있습니다.
+          업종마다 필요한 칸과 계산 방식이 다릅니다. 지금은 프리랜서와
+          행사·케이터링 양식을 쓸 수 있고, 나머지는 만들고 있습니다.
         </p>
         <ul className="mt-6 divide-y divide-rule border-y border-rule">
           {industries.map((industry) => (

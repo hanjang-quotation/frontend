@@ -1,13 +1,24 @@
 import type { Preset } from "./types";
 
-// 로그인 전에도 작성 화면을 쓸 수 있도록 프리랜서 설정을 프론트에도 둔다.
-// 백엔드의 V2__seed_freelancer_preset.sql 과 내용이 같아야 한다.
+// 로그인 전에도 작성 화면을 쓸 수 있도록 업종 설정을 프론트에도 둔다.
+// 백엔드의 최신 버전(V7__seed_event_preset.sql 의 freelancer v2)과 내용이 같아야 한다.
 export const freelancerPreset: Preset = {
   code: "freelancer",
   name: "프리랜서 (디자인·개발)",
   columns: [
-    { key: "name", label: "작업 항목", type: "text", required: true },
-    { key: "description", label: "작업 범위", type: "text" },
+    {
+      key: "name",
+      label: "작업 항목",
+      type: "text",
+      required: true,
+      placeholder: "예: 메인 페이지 디자인",
+    },
+    {
+      key: "description",
+      label: "작업 범위",
+      type: "text",
+      placeholder: "예: PC·모바일",
+    },
     { key: "quantity", label: "수량", type: "number", default: 1 },
     {
       key: "unit",
@@ -32,7 +43,12 @@ export const freelancerPreset: Preset = {
       type: "select",
       options: ["완료 후 일시불", "선금 50% · 잔금 50%"],
     },
-    { key: "deliverables", label: "납품물", type: "text" },
+    {
+      key: "deliverables",
+      label: "납품물",
+      type: "text",
+      placeholder: "예: 디자인 원본, 반응형 웹사이트",
+    },
   ],
   taxModes: ["WITHHOLDING_3_3", "VAT_10", "NONE"],
   defaultTaxMode: "WITHHOLDING_3_3",

@@ -70,7 +70,7 @@ export default function DocumentList() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-ink">내 문서</h1>
         <Link
-          href="/documents/new?preset=freelancer"
+          href="/documents/new"
           className="rounded-md bg-pen px-3 py-2 text-sm font-medium text-white hover:bg-pen-deep"
         >
           새 견적서

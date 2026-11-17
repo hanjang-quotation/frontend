@@ -37,7 +37,7 @@ export default function SiteHeader({
             내 정보
           </Link>
           <Link
-            href="/documents/new?preset=freelancer"
+            href="/documents/new"
             className="hidden rounded-md bg-pen px-3 py-1.5 font-medium text-white hover:bg-pen-deep sm:inline"
           >
             새 견적서

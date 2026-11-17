@@ -21,8 +21,8 @@ export const industries: Industry[] = [
     code: "event",
     name: "행사·케이터링",
     description: "인원수 기준 행사 견적서",
-    examples: "인원 × 1인 단가, 출장비, 행사 일시",
-    ready: false,
+    examples: "인원 × 1인 단가, 출장비, 행사일·장소, 부가세 별도",
+    ready: true,
   },
   {
     code: "construction",

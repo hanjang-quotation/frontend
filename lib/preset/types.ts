@@ -13,6 +13,8 @@ export interface PresetColumn {
   default?: string | number;
   options?: string[];
   formula?: string;
+  /** 입력 칸의 예시 문구 */
+  placeholder?: string;
 }
 
 export interface PresetTermField {
@@ -21,6 +23,8 @@ export interface PresetTermField {
   type: TermFieldType;
   default?: string | number;
   options?: string[];
+  /** 입력 칸의 예시 문구 */
+  placeholder?: string;
 }
 
 export interface Preset {

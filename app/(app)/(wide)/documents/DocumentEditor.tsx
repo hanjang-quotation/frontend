@@ -27,7 +27,7 @@ import {
   type PartyFields,
   type Profile,
 } from "@/lib/party/types";
-import type { Preset } from "@/lib/preset/types";
+import type { Preset, PresetColumn } from "@/lib/preset/types";
 import { ClientSection, SupplierSection } from "./PartyFields";
 import StatusSelect from "./StatusSelect";
 
@@ -141,6 +141,11 @@ export default function DocumentEditor({
 
   const totals = formTotals(form);
   const unitOptions = unitOptionsOf(preset);
+  // 품목 칸의 이름·예시는 업종 설정에서 (예: 프리랜서 "작업 항목", 행사 "항목")
+  const nameColumn = columnOf(preset, "name", "항목");
+  const descriptionColumn = columnOf(preset, "description", "내용");
+  const quantityColumn = columnOf(preset, "quantity", "수량");
+  const unitPriceColumn = columnOf(preset, "unitPrice", "단가");
 
   // 미리보기의 공급자: 고른 내 정보, 없으면 문서에 남아 있는 공급자
   const selectedProfile = profiles?.find((p) => p.id === form.profileId);
@@ -411,26 +416,26 @@ export default function DocumentEditor({
                   <div className="mt-2 space-y-2">
                     <input
                       className={input}
-                      aria-label="작업 항목"
+                      aria-label={nameColumn.label}
                       value={line.name}
                       onChange={(e) =>
                         changeLine(line.id, { name: e.target.value })
                       }
-                      placeholder="작업 항목 (예: 메인 페이지 디자인)"
+                      placeholder={placeholderOf(nameColumn)}
                     />
                     <input
                       className={input}
-                      aria-label="작업 범위"
+                      aria-label={descriptionColumn.label}
                       value={line.description}
                       onChange={(e) =>
                         changeLine(line.id, { description: e.target.value })
                       }
-                      placeholder="작업 범위 (선택)"
+                      placeholder={placeholderOf(descriptionColumn)}
                     />
                     <div className="grid grid-cols-[1fr_1fr_2fr] items-start gap-2">
                       <input
                         className={`${input} text-right`}
-                        aria-label="수량"
+                        aria-label={quantityColumn.label}
                         inputMode="decimal"
                         value={line.quantity}
                         onChange={(e) =>
@@ -447,7 +452,7 @@ export default function DocumentEditor({
                       />
                       <input
                         className={`${input} text-right`}
-                        aria-label="단가"
+                        aria-label={unitPriceColumn.label}
                         inputMode="numeric"
                         value={line.unitPrice}
                         onChange={(e) =>
@@ -455,7 +460,7 @@ export default function DocumentEditor({
                             unitPrice: withCommas(e.target.value),
                           })
                         }
-                        placeholder="단가"
+                        placeholder={unitPriceColumn.label}
                       />
                     </div>
                     <p className="text-right text-sm tabular-nums text-slate-700">
@@ -498,6 +503,7 @@ export default function DocumentEditor({
                         }
                         value={form.terms[field.key] ?? ""}
                         onChange={(e) => changeTerm(field.key, e.target.value)}
+                        placeholder={field.placeholder}
                       />
                     )}
                   </Field>
@@ -610,6 +616,27 @@ export default function DocumentEditor({
  * 새 문서(profileId 가 아직 undefined)에 기본 내 정보를 고르고, 그 기본 세금 방식이 이 업종에서 쓸 수 있으면 따른다.
  * 이미 정해졌으면(고른 것이든 "선택 안 함"이든) 그대로 둔다.
  */
+/** 업종 설정의 열. 설정에 없으면 이름만 있는 기본 열 */
+function columnOf(
+  preset: Preset,
+  key: string,
+  fallbackLabel: string,
+): PresetColumn {
+  return (
+    preset.columns.find((c) => c.key === key) ?? {
+      key,
+      label: fallbackLabel,
+      type: "text",
+    }
+  );
+}
+
+/** 입력 칸 예시: "작업 항목 (예: 메인 페이지 디자인)", 필수가 아니면 끝에 "(선택)" */
+function placeholderOf(column: PresetColumn): string {
+  const example = column.placeholder ? ` (${column.placeholder})` : "";
+  return `${column.label}${example}${column.required ? "" : " (선택)"}`;
+}
+
 function withDefaultSupplier(
   form: DocumentForm,
   profiles: Profile[],
