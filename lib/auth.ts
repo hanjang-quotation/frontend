@@ -27,6 +27,45 @@ export function rememberReturnPath(path: string): void {
 }
 
 /**
+ * 이 브라우저에서 마지막으로 로그인에 성공한 소셜 로그인. 카카오와 구글은 서로 다른 계정이라,
+ * 로그인 화면에 "최근에 쓴 로그인"으로 표시해 다른 쪽으로 새로 가입하는 일을 줄인다.
+ */
+export type Provider = "KAKAO" | "GOOGLE";
+
+const LAST_PROVIDER_KEY = "quotation:last-login-provider";
+const LAST_PROVIDER_CHANGED = "quotation:last-provider-changed";
+
+/** 로그인에 성공했을 때 부른다 (AuthMenu 가 /api/me 를 받은 뒤). 저장소를 못 쓰면 조용히 넘어간다 */
+export function rememberLastProvider(provider: Provider): void {
+  try {
+    if (window.localStorage.getItem(LAST_PROVIDER_KEY) === provider) return;
+    window.localStorage.setItem(LAST_PROVIDER_KEY, provider);
+    window.dispatchEvent(new Event(LAST_PROVIDER_CHANGED));
+  } catch {
+    // 개인 정보 보호 모드 등
+  }
+}
+
+/** useSyncExternalStore 용: 다른 탭에서 바뀐 것도 따라간다 */
+export function subscribeLastProvider(onChange: () => void): () => void {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(LAST_PROVIDER_CHANGED, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(LAST_PROVIDER_CHANGED, onChange);
+  };
+}
+
+export function readLastProvider(): Provider | null {
+  try {
+    const value = window.localStorage.getItem(LAST_PROVIDER_KEY);
+    return value === "KAKAO" || value === "GOOGLE" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * 로그인 상태가 바뀌었다고 알린다 (로그아웃·동의·탈퇴). 메뉴 줄(AuthMenu)이 듣고 /api/me 를 다시 부른다.
  * 화면은 cacheComponents 때문에 다시 그려지지 않을 수 있어서 따로 알린다.
  */

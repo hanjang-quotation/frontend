@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api, type Me } from "@/lib/api/client";
-import { AUTH_CHANGED, notifyAuthChanged } from "@/lib/auth";
+import {
+  AUTH_CHANGED,
+  notifyAuthChanged,
+  rememberLastProvider,
+} from "@/lib/auth";
 
 // 헤더 오른쪽의 로그인 상태. 세션 쿠키는 HttpOnly 라서 브라우저에서 /api/me 를 불러 확인한다.
 // 로그인했지만 약관에 동의하지 않았으면 동의 화면(/welcome)으로 보낸다 (약관·방침을 읽는 화면은 빼고).
@@ -22,6 +26,7 @@ export default function AuthMenu() {
       api.me().then(
         (user) => {
           setMe(user);
+          if (user) rememberLastProvider(user.provider);
           const path = window.location.pathname;
           if (user && !user.agreed && !OPEN_WITHOUT_AGREEMENT.includes(path)) {
             const next = encodeURIComponent(path + window.location.search);
