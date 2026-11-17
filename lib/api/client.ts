@@ -1,5 +1,13 @@
 // 백엔드 호출 공통 함수. 주소는 항상 /api 로 시작한다 (next.config.ts 의 rewrites 가 백엔드로 넘긴다).
 
+import type {
+  DocumentCreateRequest,
+  DocumentResponse,
+  DocumentStatus,
+  DocumentSummary,
+  DocumentUpdateRequest,
+  PageResponse,
+} from "@/lib/document/types";
 import type { Preset, PresetSummary } from "@/lib/preset/types";
 
 /** 백엔드 오류 응답 형식 (TECH_SPEC 9장) */
@@ -91,4 +99,34 @@ export const api = {
     }
   },
   logout: () => apiFetch<void>("/logout", { method: "POST" }),
+
+  documents: {
+    list: (params: { status?: DocumentStatus; page?: number } = {}) => {
+      const query = new URLSearchParams();
+      if (params.status) query.set("status", params.status);
+      if (params.page) query.set("page", String(params.page));
+      const qs = query.toString();
+      return apiFetch<PageResponse<DocumentSummary>>(
+        `/documents${qs ? `?${qs}` : ""}`,
+      );
+    },
+    get: (id: number) => apiFetch<DocumentResponse>(`/documents/${id}`),
+    create: (body: DocumentCreateRequest) =>
+      apiFetch<DocumentResponse>("/documents", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: DocumentUpdateRequest) =>
+      apiFetch<DocumentResponse>(`/documents/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    changeStatus: (id: number, status: DocumentStatus) =>
+      apiFetch<DocumentResponse>(`/documents/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }),
+    remove: (id: number) =>
+      apiFetch<void>(`/documents/${id}`, { method: "DELETE" }),
+  },
 };
