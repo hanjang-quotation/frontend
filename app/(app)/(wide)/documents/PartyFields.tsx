@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { Field, Section, inputClass as input } from "@/components/form";
 import { api } from "@/lib/api/client";
 import { errorMessages } from "@/lib/api/errors";
@@ -101,17 +101,25 @@ export function SupplierSection({
 export function ClientSection({
   clients,
   client,
+  guest,
   onChange,
   onClientSaved,
 }: {
   clients: Client[] | null;
   client: ClientForm;
+  /** 로그인하지 않았으면 true. 거래처 목록에 저장할 수 없으므로 그 버튼을 숨긴다 */
+  guest: boolean;
   onChange: (client: ClientForm) => void;
   /** 거래처 목록에 새로 저장했을 때 (목록을 갱신하라고 알린다) */
   onClientSaved: (saved: Client) => void;
 }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  // 다른 화면에 다녀오면(cacheComponents 가 이 화면을 숨겼다가 다시 보여 줄 때) 지난 안내 문구를 지운다
+  useLayoutEffect(() => {
+    return () => setMessage(null);
+  }, []);
 
   /** 칸을 고치면 저장된 거래처와 달라지므로 직접 입력으로 바꾼다 */
   const edit = (patch: Partial<ClientForm>) => {
@@ -258,7 +266,7 @@ export function ClientSection({
               : ""}
           {message && <span className="ml-1 text-blue-700">{message}</span>}
         </span>
-        {!picked && client.name.trim() !== "" && (
+        {!guest && !picked && client.name.trim() !== "" && (
           <button
             type="button"
             disabled={saving}

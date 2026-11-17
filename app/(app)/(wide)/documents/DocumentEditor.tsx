@@ -337,6 +337,7 @@ export default function DocumentEditor({
           <ClientSection
             clients={clients}
             client={form.client}
+            guest={guest}
             onChange={(client) => change({ client })}
             onClientSaved={(saved) =>
               setClients((prev) =>
