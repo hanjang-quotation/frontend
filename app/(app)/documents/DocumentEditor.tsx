@@ -16,7 +16,7 @@ import {
   type DocumentForm,
   type LineForm,
 } from "@/lib/document/form";
-import { formatPhone } from "@/lib/format";
+import { formatPhone, formatTime } from "@/lib/format";
 import type { Preset } from "@/lib/preset/types";
 
 // 견적서 작성·수정 화면 (TECH_SPEC 10.1).
@@ -39,12 +39,15 @@ export default function DocumentEditor({
   initial,
   documentId,
   docNo,
+  savedAt,
 }: {
   preset: Preset;
   initial: DocumentForm;
   /** 저장된 문서를 고칠 때만. 없으면 새 문서 */
   documentId?: number;
   docNo?: string;
+  /** 새 문서를 방금 저장하고 넘어왔을 때 그 시각. 저장 안내를 띄운 채로 시작한다 */
+  savedAt?: string;
 }) {
   const router = useRouter();
   const [form, setForm] = useState(initial);
@@ -52,7 +55,9 @@ export default function DocumentEditor({
     Math.max(0, ...initial.lines.map((l) => l.id)) + 1,
   );
   const [tab, setTab] = useState<"edit" | "preview">("edit");
-  const [save, setSave] = useState<SaveState>({ kind: "idle" });
+  const [save, setSave] = useState<SaveState>(
+    savedAt ? { kind: "saved", at: savedAt } : { kind: "idle" },
+  );
 
   const totals = formTotals(form);
   const unitOptions = unitOptionsOf(preset);
@@ -101,14 +106,12 @@ export default function DocumentEditor({
           ...body,
           presetCode: preset.code,
         });
-        router.replace(`/documents/${created.id}`);
+        // 수정 화면으로 넘어가서 저장 안내를 띄운다 (EditDocument 가 ?saved 를 읽는다)
+        router.replace(`/documents/${created.id}?saved=1`);
         return;
       }
       const updated = await api.documents.update(documentId, body);
-      setSave({
-        kind: "saved",
-        at: new Date(updated.updatedAt).toLocaleTimeString("ko-KR"),
-      });
+      setSave({ kind: "saved", at: formatTime(updated.updatedAt) });
     } catch (e) {
       setSave(saveError(e));
     }
@@ -127,11 +130,12 @@ export default function DocumentEditor({
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {save.kind === "saved" && (
-            <span className="text-sm text-green-700">
-              {save.at}에 저장했습니다
-            </span>
-          )}
+          <Link
+            href="/documents"
+            className="text-sm text-slate-600 hover:text-slate-900"
+          >
+            내 문서
+          </Link>
           <button
             type="button"
             onClick={handleSave}
@@ -142,6 +146,23 @@ export default function DocumentEditor({
           </button>
         </div>
       </div>
+
+      {save.kind === "saved" && (
+        <div
+          role="status"
+          className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800"
+        >
+          <span>
+            {save.at}에 저장했습니다.
+            {docNo && (
+              <span className="ml-1 tabular-nums">문서 번호 {docNo}</span>
+            )}
+          </span>
+          <Link href="/documents" className="font-medium underline">
+            내 문서에서 보기
+          </Link>
+        </div>
+      )}
 
       {save.kind === "error" && (
         <div

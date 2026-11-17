@@ -1,19 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ApiError, api } from "@/lib/api/client";
 import { formFromDocument } from "@/lib/document/form";
 import type { DocumentResponse } from "@/lib/document/types";
+import { formatTime } from "@/lib/format";
 import DocumentEditor from "../DocumentEditor";
 
 // 저장된 문서를 불러와 작성 화면에 넣는다. 업종 설정은 문서에 저장된 스냅샷을 쓴다.
+// 새 문서를 저장하고 넘어오면 ?saved=1 이 붙어 있어 저장 안내를 띄운다.
 type State =
   | { kind: "loading" }
   | { kind: "loaded"; doc: DocumentResponse }
   | { kind: "error"; message: string; needLogin?: boolean };
 
 export default function EditDocument({ id }: { id: string }) {
+  const justSaved = useSearchParams().has("saved");
   const [state, setState] = useState<State>({ kind: "loading" });
 
   useEffect(() => {
@@ -30,6 +34,11 @@ export default function EditDocument({ id }: { id: string }) {
       (e) => setState(loadError(e)),
     );
   }, [id]);
+
+  // 새로고침했을 때 안내가 다시 뜨지 않도록 주소에서 ?saved 를 지운다
+  useEffect(() => {
+    if (justSaved) window.history.replaceState(null, "", `/documents/${id}`);
+  }, [justSaved, id]);
 
   if (state.kind === "loading") {
     return <p className="text-sm text-slate-500">문서를 불러오는 중…</p>;
@@ -55,6 +64,7 @@ export default function EditDocument({ id }: { id: string }) {
       initial={formFromDocument(doc)}
       documentId={doc.id}
       docNo={doc.docNo}
+      savedAt={justSaved ? formatTime(doc.updatedAt) : undefined}
     />
   );
 }

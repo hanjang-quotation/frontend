@@ -1,15 +1,10 @@
 import { formatWon, type Totals } from "@/lib/calc";
+import { formatDate } from "@/lib/format";
 import type { DocumentForm } from "@/lib/document/form";
 import type { Preset } from "@/lib/preset/types";
 
 // 작성 화면 오른쪽의 실시간 미리보기. 입력값을 견적서 모양으로 그리기만 한다.
 // 금액은 화면 계산값이며, 저장하면 서버가 같은 규칙으로 다시 계산한다.
-
-/** "2026-11-20" → "2026. 11. 20." */
-function formatDate(value: string): string {
-  const [y, m, d] = value.split("-");
-  return y && m && d ? `${y}. ${m}. ${d}.` : value;
-}
 
 export default function DocumentPreview({
   preset,

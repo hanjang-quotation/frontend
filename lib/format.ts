@@ -1,4 +1,26 @@
-// 입력란 자동 서식. 저장되는 값도 이 형식 그대로다.
+// 화면 표시용 서식과 입력란 자동 서식.
+
+/** "2026-11-20" → "2026. 11. 20." */
+export function formatDate(value: string): string {
+  const [y, m, d] = value.split("-");
+  return y && m && d ? `${y}. ${m}. ${d}.` : value;
+}
+
+/** 서버 시각(ISO) → "오후 3:12:05". 브라우저에서만 부른다 (보는 사람의 시간대) */
+export function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString("ko-KR");
+}
+
+/** 서버 시각(ISO) → 오늘이면 "오후 3:12", 아니면 "2026. 11. 17." */
+export function formatDateTimeShort(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  return d.toDateString() === now.toDateString()
+    ? d.toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" })
+    : d.toLocaleDateString("ko-KR");
+}
+
+// 아래는 입력란 자동 서식. 저장되는 값도 이 형식 그대로다.
 
 /**
  * 전화번호에 하이픈을 넣는다. 숫자 외 문자는 버린다. 입력하는 도중에도 부를 수 있다.
