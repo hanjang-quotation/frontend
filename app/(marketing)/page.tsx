@@ -32,12 +32,6 @@ export default function HomePage() {
             >
               견적서 쓰기
             </Link>
-            <Link
-              href="/freelancer"
-              className="text-sm text-pen underline underline-offset-4 hover:text-pen-deep"
-            >
-              프리랜서 견적서 예시 보기
-            </Link>
           </div>
           <p className="mt-4 text-sm text-slate-500">
             로그인 없이 바로 쓸 수 있습니다. 저장할 때만 카카오·구글로
