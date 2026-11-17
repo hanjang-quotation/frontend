@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: {
-    default: "업종별 견적서 만들기",
-    template: "%s | 업종별 견적서 만들기",
+    default: `${SITE.name} — 업종별 견적서`,
+    template: `%s | ${SITE.name}`,
   },
   description:
     "업종에 맞는 항목으로 견적서와 거래명세서를 작성하고 PDF로 내려받으세요.",

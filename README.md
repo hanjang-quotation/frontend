@@ -1,6 +1,6 @@
 # quotation_frontend
 
-업종별 견적서 서비스의 화면(Next.js + TypeScript). 전체 설계는 상위 폴더의 `TECH_SPEC.md` 참고.
+바로 한장(업종별 견적서 서비스)의 화면(Next.js + TypeScript). 전체 설계는 상위 폴더의 `TECH_SPEC.md` 참고.
 
 ## 실행
 
