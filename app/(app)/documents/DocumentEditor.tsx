@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import DocumentPreview from "@/components/document/DocumentPreview";
 import { ApiError, api } from "@/lib/api/client";
 import { TAX_MODE_LABELS, formatWon, type TaxMode } from "@/lib/calc";
@@ -67,6 +67,29 @@ export default function DocumentEditor({
     savedAt ? { kind: "saved", at: savedAt } : { kind: "idle" },
   );
 
+  // Next 16(cacheComponents)은 다른 화면으로 가면 이 화면을 없애지 않고 숨겨 두었다가 돌아오면 그대로 보여 준다.
+  // 숨겨질 때: 사용자가 띄운 저장 안내는 지우고, 새 문서를 저장해 넘어간 경우에는 입력값도 처음으로 되돌린다.
+  // 저장하지 않고 다른 화면에 다녀온 경우에는 쓰던 내용을 그대로 둔다.
+  // ref 로 표시해 두는 이유: 개발 모드(StrictMode)는 처음 그릴 때도 정리 함수를 한 번 실행하므로,
+  // 표시 없이 지우면 처음 열 때 받은 저장 안내(savedAt)까지 사라진다.
+  const clearStatusOnHide = useRef(false);
+  const resetOnHide = useRef(false);
+  useLayoutEffect(() => {
+    return () => {
+      if (clearStatusOnHide.current) {
+        clearStatusOnHide.current = false;
+        setSave({ kind: "idle" });
+      }
+      if (resetOnHide.current) {
+        resetOnHide.current = false;
+        setForm(initial);
+        setSavedForm(initial);
+        setNextLineId(Math.max(0, ...initial.lines.map((l) => l.id)) + 1);
+        setTab("edit");
+      }
+    };
+  }, [initial]);
+
   const totals = formTotals(form);
   const unitOptions = unitOptionsOf(preset);
 
@@ -106,6 +129,7 @@ export default function DocumentEditor({
     });
 
   async function handleSave() {
+    clearStatusOnHide.current = true;
     setSave({ kind: "saving" });
     const body = toRequest(form, preset);
     try {
@@ -115,6 +139,7 @@ export default function DocumentEditor({
           presetCode: preset.code,
         });
         // 수정 화면으로 넘어가서 저장 안내를 띄운다 (EditDocument 가 ?saved 를 읽는다)
+        resetOnHide.current = true;
         router.replace(`/documents/${created.id}?saved=1`);
         return;
       }
@@ -484,6 +509,7 @@ export default function DocumentEditor({
                     onClick={(e) => {
                       if (!dirty) return;
                       e.preventDefault();
+                      clearStatusOnHide.current = true;
                       setSave({
                         kind: "error",
                         messages: [

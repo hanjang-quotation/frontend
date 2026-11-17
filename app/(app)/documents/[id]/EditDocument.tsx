@@ -17,7 +17,9 @@ type State =
   | { kind: "error"; message: string; needLogin?: boolean };
 
 export default function EditDocument({ id }: { id: string }) {
-  const justSaved = useSearchParams().has("saved");
+  // 처음 열릴 때 한 번만 읽는다. 아래에서 주소의 ?saved 를 지우면 useSearchParams 값도 바로 바뀌기 때문이다
+  const searchParams = useSearchParams();
+  const [justSaved] = useState(() => searchParams.has("saved"));
   const [state, setState] = useState<State>({ kind: "loading" });
 
   useEffect(() => {
