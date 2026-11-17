@@ -56,6 +56,9 @@ export default function DocumentEditor({
 }) {
   const router = useRouter();
   const [form, setForm] = useState(initial);
+  // 마지막으로 서버에 저장된 입력값. 지금 입력값과 다르면 저장하지 않은 수정이 있는 것이다
+  const [savedForm, setSavedForm] = useState(initial);
+  const dirty = JSON.stringify(form) !== JSON.stringify(savedForm);
   const [nextLineId, setNextLineId] = useState(
     Math.max(0, ...initial.lines.map((l) => l.id)) + 1,
   );
@@ -116,6 +119,7 @@ export default function DocumentEditor({
         return;
       }
       const updated = await api.documents.update(documentId, body);
+      setSavedForm(form);
       setSave({ kind: "saved", at: formatTime(updated.updatedAt) });
     } catch (e) {
       setSave(saveError(e));
@@ -144,6 +148,25 @@ export default function DocumentEditor({
           >
             내 문서
           </Link>
+          {documentId !== undefined && (
+            // PDF 는 서버에 저장된 내용으로 만들어지므로, 저장하지 않은 수정이 있으면 막는다
+            <a
+              href={`/api/documents/${documentId}/pdf`}
+              onClick={(e) => {
+                if (!dirty) return;
+                e.preventDefault();
+                setSave({
+                  kind: "error",
+                  messages: [
+                    "저장하지 않은 수정 내용이 있습니다. 저장한 뒤 PDF를 내려받아 주세요.",
+                  ],
+                });
+              }}
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              PDF 내려받기
+            </a>
+          )}
           <button
             type="button"
             onClick={handleSave}
