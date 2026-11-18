@@ -75,7 +75,12 @@ export async function apiFetch<T>(
   init: RequestInit = {},
 ): Promise<T> {
   const headers = new Headers(init.headers);
-  if (init.body && !headers.has("Content-Type")) {
+  // 파일(FormData)은 브라우저가 multipart 경계를 붙여 Content-Type 을 정하므로 건드리지 않는다
+  if (
+    init.body &&
+    !(init.body instanceof FormData) &&
+    !headers.has("Content-Type")
+  ) {
     headers.set("Content-Type", "application/json");
   }
   const method = (init.method ?? "GET").toUpperCase();
@@ -231,6 +236,17 @@ export const api = {
       }),
     remove: (id: number) =>
       apiFetch<void>(`/documents/${id}`, { method: "DELETE" }),
+    /**
+     * 바로 한장에서 내려받은 엑셀을 다시 연다 (유료 기능). 저장하지 않은 문서(id 0)를 돌려준다
+     */
+    importXlsx: (file: File) => {
+      const body = new FormData();
+      body.append("file", file);
+      return apiFetch<DocumentResponse>("/documents/import/xlsx", {
+        method: "POST",
+        body,
+      });
+    },
     /** 공유 링크 켜기. 이미 켜져 있으면 같은 주소 */
     share: (id: number) =>
       apiFetch<ShareInfo>(`/documents/${id}/share`, { method: "POST" }),

@@ -26,8 +26,9 @@ import {
   type LineForm,
   type QuantityOptionForm,
 } from "@/lib/document/form";
-import { clearDraft, saveDraft } from "@/lib/document/draft";
+import { clearDraft, saveDraft, type DraftOrigin } from "@/lib/document/draft";
 import type { DocumentStatus, ShareInfo } from "@/lib/document/types";
+import type { PastedRow } from "@/lib/document/paste";
 import { formatTime } from "@/lib/format";
 import {
   itemRequestFromLine,
@@ -42,6 +43,7 @@ import {
 } from "@/lib/party/types";
 import type { Preset, PresetColumn } from "@/lib/preset/types";
 import { ClientSection, SupplierSection } from "./PartyFields";
+import PastePanel from "./PastePanel";
 import SharePanel from "./SharePanel";
 import StatusSelect from "./StatusSelect";
 
@@ -64,12 +66,12 @@ export default function DocumentEditor({
   savedAt,
   initialShare = null,
   keptSupplier,
-  restoredDraft = false,
+  restoredFrom,
 }: {
   preset: Preset;
   initial: DocumentForm;
-  /** 새 문서: 브라우저에 임시 보관해 둔 작성 내용을 불러왔는지 */
-  restoredDraft?: boolean;
+  /** 새 문서: 임시 보관본을 불러왔으면 그 출처 (쓰던 내용, 엑셀 파일). 안내 문구가 다르다 */
+  restoredFrom?: DraftOrigin;
   /** 저장된 문서의 공급자 스냅샷. 그 내 정보가 지워져 고를 수 없을 때 "유지"로 보여 준다 */
   keptSupplier?: PartyFields | null;
   /** 저장된 문서를 고칠 때만. 없으면 새 문서 */
@@ -97,6 +99,10 @@ export default function DocumentEditor({
   // 공유 링크 (저장된 문서만). 막대의 "공유 링크" 버튼으로 칸을 연다
   const [share, setShare] = useState<ShareInfo | null>(initialShare);
   const [shareOpen, setShareOpen] = useState(false);
+  /** 엑셀에서 붙여넣기 칸을 연 곳 (묶음을 쓰면 그 묶음, 아니면 groupId null) */
+  const [pasteTarget, setPasteTarget] = useState<{
+    groupId: number | null;
+  } | null>(null);
   /** 유료 기능을 쓸 수 있는지 (/api/me). 모르는 동안은 막지 않는다 (서버가 다시 확인한다) */
   const [canUsePaid, setCanUsePaid] = useState<boolean | null>(null);
 
@@ -112,7 +118,7 @@ export default function DocumentEditor({
   const [save, setSave] = useState<SaveState>(
     savedAt ? { kind: "saved", at: savedAt } : { kind: "idle" },
   );
-  const [showRestored, setShowRestored] = useState(restoredDraft);
+  const [showRestored, setShowRestored] = useState(restoredFrom !== undefined);
   const isNew = documentId === undefined;
 
   /** 빈 새 문서로 되돌린다 (저장하고 넘어갔을 때, "새로 쓰기") */
@@ -142,6 +148,7 @@ export default function DocumentEditor({
       // 자주 쓰는 품목 안내·불러오기 목록은 화면을 떠나면 닫는다 (처음 열 때 지워져도 비어 있어 괜찮다)
       setItemNotice(null);
       setPickerLine(null);
+      setPasteTarget(null);
       if (clearStatusOnHide.current) {
         clearStatusOnHide.current = false;
         setSave({ kind: "idle" });
@@ -266,6 +273,44 @@ export default function DocumentEditor({
     }));
     setNextLineId((n) => n + 1);
   };
+  /**
+   * 엑셀에서 붙여넣은 줄들을 품목으로 넣는다 (묶음을 쓰면 그 묶음 끝에).
+   * 그 자리에 아직 아무것도 적지 않은 빈 줄 하나만 있으면 그 줄은 빼고 넣는다
+   */
+  const insertPasted = (rows: PastedRow[], groupId: number | null) => {
+    const added: LineForm[] = rows.map((row, i) => {
+      const line = emptyLine(nextLineId + i, preset, groupId);
+      return {
+        ...line,
+        name: row.name,
+        description: row.description,
+        quantity: row.quantity,
+        unit: row.unit || line.unit,
+        unitPrice: row.unitPrice,
+        extra: { ...line.extra, ...row.parts },
+      };
+    });
+    setForm((prev) => {
+      const siblings = prev.lines.filter((l) => l.groupId === groupId);
+      const blank =
+        siblings.length === 1 &&
+        siblings[0].name.trim() === "" &&
+        siblings[0].unitPrice === "" &&
+        Object.values(siblings[0].extra).every((v) => v === "")
+          ? siblings[0].id
+          : null;
+      return {
+        ...prev,
+        lines: sortByGroups(
+          [...prev.lines.filter((l) => l.id !== blank), ...added],
+          prev.groups,
+        ),
+      };
+    });
+    setNextLineId((n) => n + rows.length);
+    setPasteTarget(null);
+  };
+
   /** 행 삭제. 마지막 한 줄(묶음을 쓰면 그 묶음의 마지막 한 줄)은 지우지 않는다 */
   const removeLine = (id: number) =>
     setForm((prev) => {
@@ -663,7 +708,9 @@ export default function DocumentEditor({
           className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-md bg-pen-soft px-4 py-3 text-sm text-pen-deep"
         >
           <span>
-            작성하던 견적서를 불러왔습니다. 확인하고 저장을 눌러 주세요.
+            {restoredFrom === "excel"
+              ? "엑셀 파일을 불러왔습니다. 거래처·금액을 확인하고 저장을 눌러 주세요."
+              : "작성하던 견적서를 불러왔습니다. 확인하고 저장을 눌러 주세요."}
           </span>
           <button
             type="button"
@@ -852,18 +899,40 @@ export default function DocumentEditor({
                         )}
                       </ol>
                       <div className="mt-3 flex items-center justify-between gap-3">
-                        <button
-                          type="button"
-                          onClick={() => addLine(group.id)}
-                          className="rounded-md border border-dashed border-slate-300 bg-paper px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-                        >
-                          + 품목 추가
-                        </button>
+                        <span className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => addLine(group.id)}
+                            className="rounded-md border border-dashed border-slate-300 bg-paper px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+                          >
+                            + 품목 추가
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPasteTarget(
+                                pasteTarget?.groupId === group.id
+                                  ? null
+                                  : { groupId: group.id },
+                              )
+                            }
+                            className="rounded-md px-2 py-1.5 text-sm text-pen hover:text-pen-deep"
+                          >
+                            엑셀에서 붙여넣기
+                          </button>
+                        </span>
                         <p className="text-sm font-medium tabular-nums text-slate-700">
                           {group.name.trim() || groupLabel} 소계{" "}
                           {formatWon(subtotal)}
                         </p>
                       </div>
+                      {pasteTarget?.groupId === group.id && (
+                        <PastePanel
+                          preset={preset}
+                          onInsert={(rows) => insertPasted(rows, group.id)}
+                          onClose={() => setPasteTarget(null)}
+                        />
+                      )}
                     </div>
                   );
                 })}
@@ -894,13 +963,31 @@ export default function DocumentEditor({
                     ),
                   )}
                 </ol>
-                <button
-                  type="button"
-                  onClick={() => addLine(null)}
-                  className="mt-3 w-full rounded-md border border-dashed border-slate-300 py-2 text-sm text-slate-600 hover:bg-slate-50"
-                >
-                  + 품목 추가
-                </button>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => addLine(null)}
+                    className="flex-1 rounded-md border border-dashed border-slate-300 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                  >
+                    + 품목 추가
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPasteTarget(pasteTarget ? null : { groupId: null })
+                    }
+                    className="shrink-0 rounded-md px-3 py-2 text-sm text-pen hover:text-pen-deep"
+                  >
+                    엑셀에서 붙여넣기
+                  </button>
+                </div>
+                {pasteTarget && pasteTarget.groupId === null && (
+                  <PastePanel
+                    preset={preset}
+                    onInsert={(rows) => insertPasted(rows, null)}
+                    onClose={() => setPasteTarget(null)}
+                  />
+                )}
               </>
             )}
           </Section>
