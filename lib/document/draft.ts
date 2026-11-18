@@ -8,14 +8,16 @@ import { normalizeForm, type DocumentForm } from "./form";
 /** 형식이 바뀌면 v 를 올린다 (예전 형식은 읽지 않는다) */
 const KEY = "quotation:new-document-draft:v1";
 
-/** 보관본이 어디서 왔는지: 쓰던 내용, 또는 엑셀 파일에서 연 내용 */
-export type DraftOrigin = "draft" | "excel";
+/** 보관본이 어디서 왔는지: 쓰던 내용, 엑셀 파일에서 연 내용, AI 로 읽은 내용 */
+export type DraftOrigin = "draft" | "excel" | "ai";
 
 /** 업종 설정 code 가 같은 임시 보관본만 되살린다 */
 interface Stored {
   presetCode: string;
   form: DocumentForm;
   origin?: DraftOrigin;
+  /** AI 로 읽은 경우 원본에 적혀 있던 합계 (계산한 합계와 다르면 알려 준다) */
+  printedTotal?: number | null;
 }
 
 /** 무언가 적은 게 있는지. 빈 작성 화면은 보관하지 않는다 */
@@ -42,9 +44,11 @@ function read(): Stored | null {
   }
 }
 
-export function loadDraft(
-  preset: Preset,
-): { form: DocumentForm; origin: DraftOrigin } | null {
+export function loadDraft(preset: Preset): {
+  form: DocumentForm;
+  origin: DraftOrigin;
+  printedTotal: number | null;
+} | null {
   const stored = read();
   if (
     !stored ||
@@ -60,6 +64,7 @@ export function loadDraft(
   return {
     form: { ...normalizeForm(stored.form, preset), profileId: undefined },
     origin: stored.origin ?? "draft",
+    printedTotal: stored.printedTotal ?? null,
   };
 }
 
@@ -71,6 +76,7 @@ export function saveDraft(
   presetCode: string,
   form: DocumentForm,
   origin?: DraftOrigin,
+  printedTotal?: number | null,
 ): void {
   try {
     if (hasContent(form)) {
@@ -81,6 +87,12 @@ export function saveDraft(
         origin:
           origin ??
           (previous?.presetCode === presetCode ? previous.origin : undefined),
+        printedTotal:
+          origin !== undefined
+            ? (printedTotal ?? null)
+            : previous?.presetCode === presetCode
+              ? previous.printedTotal
+              : null,
       };
       window.localStorage.setItem(KEY, JSON.stringify(stored));
     } else {

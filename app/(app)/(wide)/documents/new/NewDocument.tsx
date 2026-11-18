@@ -25,6 +25,7 @@ export default function NewDocument() {
       preset={preset}
       initial={draft?.form ?? emptyForm(preset, todayString())}
       restoredFrom={draft?.origin}
+      printedTotal={draft?.printedTotal ?? null}
     />
   );
 }

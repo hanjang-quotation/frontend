@@ -77,11 +77,14 @@ export default function DocumentEditor({
   derived = [],
   keptSupplier,
   restoredFrom,
+  printedTotal = null,
 }: {
   preset: Preset;
   initial: DocumentForm;
   /** 새 문서: 임시 보관본을 불러왔으면 그 출처 (쓰던 내용, 엑셀 파일). 안내 문구가 다르다 */
   restoredFrom?: DraftOrigin;
+  /** AI 로 읽은 경우 원본에 적혀 있던 합계 (다시 계산한 합계와 다르면 알려 준다) */
+  printedTotal?: number | null;
   /** 저장된 문서의 공급자 스냅샷. 그 내 정보가 지워져 고를 수 없을 때 "유지"로 보여 준다 */
   keptSupplier?: PartyFields | null;
   /** 저장된 문서를 고칠 때만. 없으면 새 문서 */
@@ -800,9 +803,27 @@ export default function DocumentEditor({
           className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-md bg-pen-soft px-4 py-3 text-sm text-pen-deep"
         >
           <span>
-            {restoredFrom === "excel"
-              ? "엑셀 파일을 불러왔습니다. 거래처·금액을 확인하고 저장을 눌러 주세요."
-              : "작성하던 견적서를 불러왔습니다. 확인하고 저장을 눌러 주세요."}
+            {restoredFrom === "ai" ? (
+              <>
+                사진에서 AI 로 읽어 왔습니다.{" "}
+                <strong>
+                  잘못 읽은 곳이 있을 수 있으니 거래처·수량·단가를 꼭 확인하고
+                </strong>{" "}
+                저장을 눌러 주세요.
+                {printedTotal != null &&
+                  printedTotal !== totals.totalAmount && (
+                    <span className="mt-1 block text-red-700">
+                      사진에 적힌 합계 {formatWon(printedTotal)}와 다시 계산한
+                      합계 {formatWon(totals.totalAmount)}가 다릅니다. 품목과
+                      세금 방식을 확인해 주세요.
+                    </span>
+                  )}
+              </>
+            ) : restoredFrom === "excel" ? (
+              "엑셀 파일을 불러왔습니다. 거래처·금액을 확인하고 저장을 눌러 주세요."
+            ) : (
+              "작성하던 견적서를 불러왔습니다. 확인하고 저장을 눌러 주세요."
+            )}
           </span>
           <button
             type="button"

@@ -124,3 +124,26 @@ export async function drawStamp(text: string): Promise<HTMLCanvasElement> {
   });
   return canvas;
 }
+
+/**
+ * AI 로 읽을 사진을 줄인다: 긴 변 2000px 이하 JPEG (글자를 읽을 만큼은 남기고 올리기는 빠르게).
+ * 휴대폰 사진(수 MB)도 보통 0.5~1.5MB 가 된다. 서버 상한은 8MB
+ */
+export async function shrinkPhoto(file: Blob): Promise<Blob> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 2000 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("사진을 처리하지 못했습니다.");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  for (const quality of [0.88, 0.8, 0.7]) {
+    const jpeg = await toBlob(canvas, "image/jpeg", quality);
+    if (jpeg && jpeg.size <= 7 * 1024 * 1024) return jpeg;
+  }
+  throw new Error("사진이 너무 큽니다. 다른 사진으로 해 주세요.");
+}

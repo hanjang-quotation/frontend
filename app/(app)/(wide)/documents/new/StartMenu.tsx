@@ -8,9 +8,10 @@ import { errorMessages } from "@/lib/api/errors";
 import { saveDraft } from "@/lib/document/draft";
 import { formFromDocument } from "@/lib/document/form";
 import { industries } from "@/lib/preset/industries";
+import ImportPhoto from "./ImportPhoto";
 
 // 새 견적서를 어떻게 시작할지 고르는 화면 (/documents/new, 업종을 고르기 전).
-// 직접 작성(업종 고르기), 엑셀 파일 열기(유료), AI로 읽기(준비 중).
+// 직접 작성(업종 고르기), 엑셀 파일 열기(유료), 사진으로 가져오기(AI, 무료는 하루 1건).
 
 type Mode = "write" | "excel" | "ai";
 
@@ -41,18 +42,17 @@ export default function StartMenu() {
           pro
         />
         <ModeButton
-          active={false}
-          disabled
-          onClick={() => undefined}
-          title="AI로 읽기"
-          body="준비 중입니다"
-          pro
+          active={mode === "ai"}
+          onClick={() => setMode("ai")}
+          title="사진으로 가져오기"
+          body="AI 가 사진을 읽어 채움"
         />
       </div>
 
       <div className="mt-6">
         {mode === "write" && <ChooseIndustry />}
         {mode === "excel" && <OpenExcel />}
+        {mode === "ai" && <ImportPhoto />}
       </div>
     </div>
   );
