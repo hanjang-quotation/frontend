@@ -62,7 +62,6 @@ export default function SharedView({ token }: { token: string }) {
             className="inline-flex items-center gap-1 hover:text-ink"
           >
             <BrandMark />
-            <span>로 만든 견적서</span>
           </Link>
         </p>
       </div>
