@@ -23,6 +23,26 @@ export const DOC_TYPE_LABELS: Record<DocType, string> = {
   INVOICE: "청구서",
 };
 
+/**
+ * 문서 종류별 날짜 칸 이름. until 이 null 이면 두 번째 날짜(validUntil)를 쓰지 않는다.
+ * 백엔드 DocType 의 issueDateLabel·validUntilLabel 과 같아야 한다
+ */
+export const DOC_DATE_LABELS: Record<
+  DocType,
+  { issue: string; until: string | null }
+> = {
+  ESTIMATE: { issue: "작성일", until: "유효기간" },
+  STATEMENT: { issue: "거래일", until: null },
+  INVOICE: { issue: "청구일", until: "입금 기한" },
+};
+
+/** 변환으로 이어진 문서 (원본, 또는 이 문서로 만든 문서) */
+export interface RelatedDocument {
+  id: number;
+  docNo: string;
+  docType: DocType;
+}
+
 /** 거래처. id 를 주면 저장된 거래처, 없으면 입력한 값을 쓴다 */
 export interface ClientInput {
   id?: number | null;
@@ -121,6 +141,10 @@ export interface DocumentResponse {
   amounts: DocumentAmounts;
   /** 공유 링크 상태. 공유하지 않았으면 null */
   share: ShareInfo | null;
+  /** 이 문서를 변환해 만든 원본 (상세 조회에서만) */
+  source: RelatedDocument | null;
+  /** 이 문서로 만든 거래명세서·청구서 (상세 조회에서만) */
+  derived: RelatedDocument[];
   createdAt: string;
   updatedAt: string;
 }
@@ -142,6 +166,8 @@ export type SharedDocument = Omit<
   | "profileId"
   | "clientId"
   | "share"
+  | "source"
+  | "derived"
   | "createdAt"
   | "updatedAt"
 >;

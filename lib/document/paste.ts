@@ -21,7 +21,8 @@ export interface PastedRow {
   parts: Record<string, string>;
 }
 
-const HEADER_WORDS = /^(no|번호|품명|항목|작업 ?항목|규격|사양|내용|수량|단위|단가|금액|자재|노무|비고)/i;
+const HEADER_WORDS =
+  /^(no|번호|품명|항목|작업 ?항목|규격|사양|내용|수량|단위|단가|금액|자재|노무|비고)/i;
 
 /** 숫자 칸: 1,000 / 1000원 / 1.5 */
 function numberOf(cell: string): string | null {

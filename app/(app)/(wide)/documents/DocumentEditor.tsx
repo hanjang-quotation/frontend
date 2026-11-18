@@ -27,7 +27,14 @@ import {
   type QuantityOptionForm,
 } from "@/lib/document/form";
 import { clearDraft, saveDraft, type DraftOrigin } from "@/lib/document/draft";
-import type { DocumentStatus, ShareInfo } from "@/lib/document/types";
+import {
+  DOC_DATE_LABELS,
+  DOC_TYPE_LABELS,
+  type DocType,
+  type DocumentStatus,
+  type RelatedDocument,
+  type ShareInfo,
+} from "@/lib/document/types";
 import type { PastedRow } from "@/lib/document/paste";
 import { formatTime } from "@/lib/format";
 import {
@@ -65,6 +72,9 @@ export default function DocumentEditor({
   status,
   savedAt,
   initialShare = null,
+  docType = "ESTIMATE",
+  source = null,
+  derived = [],
   keptSupplier,
   restoredFrom,
 }: {
@@ -83,6 +93,12 @@ export default function DocumentEditor({
   savedAt?: string;
   /** 저장된 문서의 공유 링크 상태 */
   initialShare?: ShareInfo | null;
+  /** 문서 종류. 제목·날짜 칸 이름이 달라진다. 새 문서는 늘 견적서 */
+  docType?: DocType;
+  /** 변환으로 만든 문서의 원본 */
+  source?: RelatedDocument | null;
+  /** 이 문서로 만든 거래명세서·청구서 */
+  derived?: RelatedDocument[];
 }) {
   const router = useRouter();
   const [form, setForm] = useState(initial);
@@ -99,6 +115,9 @@ export default function DocumentEditor({
   // 공유 링크 (저장된 문서만). 막대의 "공유 링크" 버튼으로 칸을 연다
   const [share, setShare] = useState<ShareInfo | null>(initialShare);
   const [shareOpen, setShareOpen] = useState(false);
+  /** 문서 변환 메뉴 */
+  const [convertOpen, setConvertOpen] = useState(false);
+  const [converting, setConverting] = useState(false);
   /** 엑셀에서 붙여넣기 칸을 연 곳 (묶음을 쓰면 그 묶음, 아니면 groupId null) */
   const [pasteTarget, setPasteTarget] = useState<{
     groupId: number | null;
@@ -149,6 +168,7 @@ export default function DocumentEditor({
       setItemNotice(null);
       setPickerLine(null);
       setPasteTarget(null);
+      setConvertOpen(false);
       if (clearStatusOnHide.current) {
         clearStatusOnHide.current = false;
         setSave({ kind: "idle" });
@@ -637,6 +657,36 @@ export default function DocumentEditor({
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  /** 문서 변환: 저장된 내용으로 새 문서를 만들고 그 문서로 넘어간다 */
+  async function convertTo(target: DocType) {
+    setConvertOpen(false);
+    if (documentId === undefined) return;
+    let message: string | null = null;
+    if (canUsePaid === false) {
+      message = "문서 변환은 유료 요금제에서 쓸 수 있습니다.";
+    } else if (dirty) {
+      message =
+        "저장하지 않은 수정 내용이 있습니다. 저장한 뒤 문서를 변환해 주세요.";
+    }
+    if (message) {
+      clearStatusOnHide.current = true;
+      setSave({ kind: "error", messages: [message] });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    setConverting(true);
+    try {
+      const created = await api.documents.convert(documentId, target);
+      router.push(`/documents/${created.id}?saved=1`);
+    } catch (e) {
+      clearStatusOnHide.current = true;
+      setSave(saveError(e));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } finally {
+      setConverting(false);
+    }
+  }
+
   async function handleSave() {
     clearStatusOnHide.current = true;
     setSave({ kind: "saving" });
@@ -678,12 +728,48 @@ export default function DocumentEditor({
   return (
     <div>
       <h1 className="text-xl font-bold text-ink">
-        {documentId === undefined ? "새 견적서" : "견적서 수정"}
+        {documentId === undefined
+          ? `새 ${DOC_TYPE_LABELS[docType]}`
+          : `${DOC_TYPE_LABELS[docType]} 수정`}
       </h1>
       <p className="mt-0.5 text-sm text-slate-500">
         {preset.name}
         {docNo && <span className="ml-2 tabular-nums">{docNo}</span>}
       </p>
+      {/* 변환으로 이어진 문서: 원본, 이 문서로 만든 문서 */}
+      {(source || derived.length > 0) && (
+        <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-600">
+          {source && (
+            <span>
+              원본{" "}
+              <Link
+                href={`/documents/${source.id}`}
+                className="text-pen underline-offset-2 hover:underline"
+              >
+                {DOC_TYPE_LABELS[source.docType]}{" "}
+                <span className="tabular-nums">{source.docNo}</span>
+              </Link>
+            </span>
+          )}
+          {derived.length > 0 && (
+            <span>
+              이 문서로 만든 문서{" "}
+              {derived.map((d, i) => (
+                <span key={d.id}>
+                  {i > 0 && " · "}
+                  <Link
+                    href={`/documents/${d.id}`}
+                    className="text-pen underline-offset-2 hover:underline"
+                  >
+                    {DOC_TYPE_LABELS[d.docType]}{" "}
+                    <span className="tabular-nums">{d.docNo}</span>
+                  </Link>
+                </span>
+              ))}
+            </span>
+          )}
+        </p>
+      )}
 
       {/* 왼쪽 상태 선택(저장된 문서만), 오른쪽 저장 버튼 */}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
@@ -814,7 +900,7 @@ export default function DocumentEditor({
               />
             </Field>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <Field label="작성일">
+              <Field label={DOC_DATE_LABELS[docType].issue}>
                 <input
                   className={input}
                   type="date"
@@ -822,15 +908,18 @@ export default function DocumentEditor({
                   onChange={(e) => change({ issueDate: e.target.value })}
                 />
               </Field>
-              <Field label="유효기간 (선택)">
-                <input
-                  className={input}
-                  type="date"
-                  value={form.validUntil}
-                  min={form.issueDate}
-                  onChange={(e) => change({ validUntil: e.target.value })}
-                />
-              </Field>
+              {/* 두 번째 날짜: 견적서 유효기간, 청구서 입금 기한. 거래명세서에는 없다 */}
+              {DOC_DATE_LABELS[docType].until && (
+                <Field label={`${DOC_DATE_LABELS[docType].until} (선택)`}>
+                  <input
+                    className={input}
+                    type="date"
+                    value={form.validUntil}
+                    min={form.issueDate}
+                    onChange={(e) => change({ validUntil: e.target.value })}
+                  />
+                </Field>
+              )}
             </div>
           </Section>
 
@@ -1127,6 +1216,39 @@ export default function DocumentEditor({
                     엑셀 내려받기
                     <ProBadge />
                   </a>
+                  {/* 문서 변환 (유료): 원본은 두고 거래명세서·청구서를 새로 만든다 */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setConvertOpen((open) => !open)}
+                      aria-expanded={convertOpen}
+                      disabled={converting}
+                      className="rounded-md border border-slate-300 bg-paper px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                    >
+                      {converting ? "만드는 중…" : "문서 변환"}
+                      <ProBadge />
+                    </button>
+                    {convertOpen && (
+                      <div className="absolute right-0 z-10 mt-1 w-48 rounded-md border border-rule bg-paper py-1 shadow-md">
+                        {CONVERT_TARGETS.filter((t) => t !== docType).map(
+                          (target) => (
+                            <button
+                              key={target}
+                              type="button"
+                              onClick={() => convertTo(target)}
+                              className="block w-full px-3 py-2 text-left text-sm text-ink hover:bg-pen-soft"
+                            >
+                              {DOC_TYPE_LABELS[target]}로 만들기
+                            </button>
+                          ),
+                        )}
+                        <p className="border-t border-rule px-3 py-2 text-xs text-slate-500">
+                          지금 문서는 그대로 두고 같은 내용으로 새 문서를
+                          만듭니다. 날짜는 오늘로 바뀝니다.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                   <button
                     type="button"
                     onClick={() => setShareOpen((open) => !open)}
@@ -1159,6 +1281,7 @@ export default function DocumentEditor({
               totals={totals}
               docNo={docNo}
               supplier={supplier}
+              docType={docType}
             />
           </div>
         </div>
@@ -1231,6 +1354,9 @@ function saveError(e: unknown): SaveState {
     messages: ["저장하지 못했습니다. 잠시 후 다시 시도해 주세요."],
   };
 }
+
+/** 변환해 만들 수 있는 문서 종류 (견적서로는 바꾸지 않는다) */
+const CONVERT_TARGETS: DocType[] = ["STATEMENT", "INVOICE"];
 
 const CUSTOM = "__custom__";
 

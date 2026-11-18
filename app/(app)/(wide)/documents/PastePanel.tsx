@@ -42,9 +42,9 @@ export default function PastePanel({
         </button>
       </div>
       <p className="mt-1 text-xs text-slate-500">
-        엑셀에서 품목 칸을 여러 줄 복사해 아래에 붙여넣으세요. 열 순서는{" "}
-        {order} 순이 가장 잘 맞습니다. 번호·금액 열과 표 머리 줄은 알아서
-        뺍니다. 넣기 전에 아래에서 확인하세요.
+        엑셀에서 품목 칸을 여러 줄 복사해 아래에 붙여넣으세요. 열 순서는 {order}{" "}
+        순이 가장 잘 맞습니다. 번호·금액 열과 표 머리 줄은 알아서 뺍니다. 넣기
+        전에 아래에서 확인하세요.
       </p>
       <textarea
         className={`${inputClass} mt-2 min-h-24 font-mono text-xs`}

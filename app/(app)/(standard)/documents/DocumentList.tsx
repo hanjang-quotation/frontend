@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ApiError, api } from "@/lib/api/client";
 import { formatWon } from "@/lib/calc";
 import {
+  DOC_TYPE_LABELS,
   STATUS_LABELS,
   type DocumentStatus,
   type DocumentSummary,
@@ -130,7 +131,15 @@ export default function DocumentList() {
                   className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-slate-50"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-ink">{doc.title}</p>
+                    <p className="truncate font-medium text-ink">
+                      {/* 견적서가 아닌 문서(변환으로 만든 거래명세서·청구서)는 종류를 앞에 붙인다 */}
+                      {doc.docType !== "ESTIMATE" && (
+                        <span className="mr-1.5 rounded bg-slate-100 px-1.5 py-0.5 text-xs font-normal text-slate-600">
+                          {DOC_TYPE_LABELS[doc.docType]}
+                        </span>
+                      )}
+                      {doc.title}
+                    </p>
                     <p className="text-xs text-slate-500">
                       <span className="tabular-nums">{doc.docNo}</span>
                       {doc.clientName && <> · {doc.clientName}</>}

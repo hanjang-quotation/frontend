@@ -93,7 +93,7 @@ function Loaded({ doc, token }: { doc: SharedDocument; token: string }) {
         totals={formTotals(form, doc.presetSnapshot)}
         docNo={doc.docNo}
         supplier={partyView(doc.partySnapshot.supplier as PartyFields | null)}
-        heading={heading}
+        docType={doc.docType}
       />
     </>
   );

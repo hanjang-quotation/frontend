@@ -70,6 +70,9 @@ export default function EditDocument({ id }: { id: string }) {
       keptSupplier={doc.partySnapshot.supplier}
       savedAt={justSaved ? formatTime(doc.updatedAt) : undefined}
       initialShare={doc.share}
+      docType={doc.docType}
+      source={doc.source}
+      derived={doc.derived}
     />
   );
 }

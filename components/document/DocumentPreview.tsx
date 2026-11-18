@@ -10,6 +10,11 @@ import {
   type DocumentForm,
   type LineForm,
 } from "@/lib/document/form";
+import {
+  DOC_DATE_LABELS,
+  DOC_TYPE_LABELS,
+  type DocType,
+} from "@/lib/document/types";
 import { partyView, type PartyView } from "@/lib/party/types";
 import type { Preset } from "@/lib/preset/types";
 
@@ -22,7 +27,7 @@ export default function DocumentPreview({
   totals,
   docNo,
   supplier,
-  heading = "견적서",
+  docType = "ESTIMATE",
 }: {
   preset: Preset;
   form: DocumentForm;
@@ -30,9 +35,12 @@ export default function DocumentPreview({
   docNo?: string;
   /** 공급자 칸. 고른 내 정보 또는 문서에 남아 있는 공급자 */
   supplier: PartyView;
-  heading?: string;
+  /** 문서 종류. 제목과 날짜 칸 이름이 달라진다 (거래명세서는 두 번째 날짜가 없다) */
+  docType?: DocType;
 }) {
   const { taxMode } = form;
+  const heading = DOC_TYPE_LABELS[docType];
+  const dateLabels = DOC_DATE_LABELS[docType];
   const receiver = partyView(form.client);
   const filledTerms = preset.termFields.filter(
     (field) => (form.terms[field.key] ?? "").trim() !== "",
@@ -83,13 +91,13 @@ export default function DocumentPreview({
               <dd className="text-right tabular-nums">{docNo}</dd>
             </>
           )}
-          <dt>작성일</dt>
+          <dt>{dateLabels.issue}</dt>
           <dd className="text-right tabular-nums">
             {form.issueDate ? formatDate(form.issueDate) : "-"}
           </dd>
-          {form.validUntil && (
+          {form.validUntil && dateLabels.until && (
             <>
-              <dt>유효기간</dt>
+              <dt>{dateLabels.until}</dt>
               <dd className="text-right tabular-nums">
                 {formatDate(form.validUntil)}까지
               </dd>

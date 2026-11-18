@@ -2,6 +2,7 @@
 
 import type {
   DocumentCreateRequest,
+  DocType,
   DocumentResponse,
   DocumentStatus,
   DocumentSummary,
@@ -247,6 +248,12 @@ export const api = {
         body,
       });
     },
+    /** 문서 변환 (유료 기능): 원본은 두고 거래명세서·청구서를 새로 만든다 */
+    convert: (id: number, docType: DocType) =>
+      apiFetch<DocumentResponse>(`/documents/${id}/convert`, {
+        method: "POST",
+        body: JSON.stringify({ docType }),
+      }),
     /** 공유 링크 켜기. 이미 켜져 있으면 같은 주소 */
     share: (id: number) =>
       apiFetch<ShareInfo>(`/documents/${id}/share`, { method: "POST" }),
