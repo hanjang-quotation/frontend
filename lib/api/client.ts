@@ -17,6 +17,7 @@ import type {
   Profile,
   ProfileRequest,
 } from "@/lib/party/types";
+import type { ImageKind, UploadedImage } from "@/lib/image";
 import type { SavedItem, SavedItemRequest } from "@/lib/item";
 import type { Preset, PresetSummary } from "@/lib/preset/types";
 
@@ -184,6 +185,16 @@ export const api = {
       }),
     remove: (id: number) =>
       apiFetch<void>(`/clients/${id}`, { method: "DELETE" }),
+  },
+
+  /** 로고·도장 이미지 올리기 (유료 기능). 줄인 이미지를 보낸다 (lib/image.ts 의 shrinkImage) */
+  images: {
+    upload: (image: Blob, kind: ImageKind) => {
+      const body = new FormData();
+      body.append("file", image, kind === "LOGO" ? "logo.png" : "stamp.png");
+      body.append("kind", kind);
+      return apiFetch<UploadedImage>("/images", { method: "POST", body });
+    },
   },
 
   /** 자주 쓰는 품목. presetCode 가 없으면 모든 업종 */

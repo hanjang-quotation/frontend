@@ -94,6 +94,9 @@ function Loaded({ doc, token }: { doc: SharedDocument; token: string }) {
         docNo={doc.docNo}
         supplier={partyView(doc.partySnapshot.supplier as PartyFields | null)}
         supplierFields={doc.partySnapshot.supplier as PartyFields | null}
+        imageSrc={(id) =>
+          `/api/public/documents/${encodeURIComponent(token)}/images/${id}`
+        }
         docType={doc.docType}
       />
     </>

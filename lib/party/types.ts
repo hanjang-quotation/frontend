@@ -17,6 +17,9 @@ export interface Profile {
   /** 업태·종목 (거래명세서의 공급자 칸) */
   businessType: string | null;
   businessItem: string | null;
+  /** 로고·도장 이미지 (GET /api/images/{id}) */
+  logoImageId: number | null;
+  stampImageId: number | null;
   /** 새 문서의 기본 세금 방식 */
   taxType: TaxMode;
   isDefault: boolean;
@@ -34,6 +37,8 @@ export interface ProfileRequest {
   bankHolder?: string;
   businessType?: string;
   businessItem?: string;
+  logoImageId?: number | null;
+  stampImageId?: number | null;
   taxType?: TaxMode;
   /** true 면 이 내 정보를 기본으로 한다 */
   isDefault?: boolean;
@@ -87,7 +92,11 @@ export type PartyFields = Partial<
     | "businessItem",
     string | null
   >
->;
+> & {
+  /** 로고·도장 이미지 id (내 정보, 문서의 공급자 스냅샷) */
+  logoImageId?: number | null;
+  stampImageId?: number | null;
+};
 
 /** 내 정보·거래처·문서 스냅샷을 미리보기 표시용으로 바꾼다 (백엔드 PdfView.party 와 같은 순서) */
 export function partyView(p: PartyFields | null | undefined): PartyView {

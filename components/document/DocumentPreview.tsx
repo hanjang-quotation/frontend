@@ -1,5 +1,8 @@
+/* eslint-disable @next/next/no-img-element -- 로고·도장은 로그인·공유 링크 주소의 이미지를 그대로 보여 준다 */
+
 import { formatWon, type Totals } from "@/lib/calc";
 import { formatDate, koreanAmountSentence } from "@/lib/format";
+import { imageUrl } from "@/lib/image";
 import { Fragment } from "react";
 import {
   filledOptions,
@@ -28,6 +31,7 @@ export default function DocumentPreview({
   docNo,
   supplier,
   supplierFields = null,
+  imageSrc = imageUrl,
   docType = "ESTIMATE",
 }: {
   preset: Preset;
@@ -38,12 +42,16 @@ export default function DocumentPreview({
   supplier: PartyView;
   /** 공급자 스냅샷 원래 값 (거래명세서의 공급자 표에 칸별로 쓴다) */
   supplierFields?: PartyFields | null;
+  /** 로고·도장 이미지 주소 (작성 화면: 본인 이미지, 공유 링크: 그 링크의 이미지) */
+  imageSrc?: (id: number) => string;
   /** 문서 종류. 제목과 날짜 칸 이름이 달라진다 (거래명세서는 두 번째 날짜가 없다) */
   docType?: DocType;
 }) {
   const { taxMode } = form;
   const heading = DOC_TYPE_LABELS[docType];
   const dateLabels = DOC_DATE_LABELS[docType];
+  const logoId = supplierFields?.logoImageId ?? null;
+  const stampId = supplierFields?.stampImageId ?? null;
   const receiver = partyView(form.client);
   const filledTerms = preset.termFields.filter(
     (field) => (form.terms[field.key] ?? "").trim() !== "",
@@ -84,9 +92,18 @@ export default function DocumentPreview({
   return (
     <article className="rounded-xl border border-rule bg-paper p-6 text-[13px] leading-relaxed text-slate-800 shadow-sm sm:p-8">
       <header className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-slate-800 pb-4">
-        <h2 className="text-2xl font-bold tracking-[0.3em] text-ink">
-          {heading}
-        </h2>
+        <div>
+          {logoId != null && (
+            <img
+              src={imageSrc(logoId)}
+              alt="로고"
+              className="mb-2 max-h-12 max-w-[180px] object-contain"
+            />
+          )}
+          <h2 className="text-2xl font-bold tracking-[0.3em] text-ink">
+            {heading}
+          </h2>
+        </div>
         <dl className="grid grid-cols-[auto_auto] gap-x-3 text-xs text-slate-600">
           {docNo && (
             <>
@@ -132,7 +149,19 @@ export default function DocumentPreview({
               rows={[
                 ["등록번호", supplierFields?.businessNo],
                 ["상호", supplierFields?.name],
-                ["성명", supplierFields?.representative],
+                [
+                  "성명",
+                  <span key="rep" className="inline-flex items-center gap-1">
+                    {supplierFields?.representative}
+                    {stampId != null && (
+                      <img
+                        src={imageSrc(stampId)}
+                        alt="도장"
+                        className="h-8 w-8 object-contain"
+                      />
+                    )}
+                  </span>,
+                ],
                 ["주소", supplierFields?.address],
                 ["업태", supplierFields?.businessType],
                 ["종목", supplierFields?.businessItem],
@@ -173,8 +202,15 @@ export default function DocumentPreview({
               <h3 className="text-xs font-semibold text-slate-500">공급자</h3>
               {supplier.name ? (
                 <>
-                  <p className="mt-1 text-base font-semibold text-ink">
+                  <p className="mt-1 flex items-center gap-2 text-base font-semibold text-ink">
                     {supplier.name}
+                    {stampId != null && (
+                      <img
+                        src={imageSrc(stampId)}
+                        alt="도장"
+                        className="h-12 w-12 object-contain"
+                      />
+                    )}
                   </p>
                   {supplier.details && (
                     <p className="text-slate-600">{supplier.details}</p>
@@ -467,7 +503,7 @@ function PartyGrid({
   rows,
 }: {
   title: string;
-  rows: [string, string | null | undefined][];
+  rows: [string, React.ReactNode][];
 }) {
   return (
     <table className="w-full border-collapse border border-slate-400 text-xs">
@@ -480,7 +516,9 @@ function PartyGrid({
             <th className="w-16 border-r border-slate-200 bg-slate-50 px-2 py-1 text-center font-normal text-slate-600">
               {label}
             </th>
-            <td className="px-2 py-1 text-ink">{value?.trim() || ""}</td>
+            <td className="px-2 py-1 text-ink">
+              {typeof value === "string" ? value.trim() : value}
+            </td>
           </tr>
         ))}
       </tbody>

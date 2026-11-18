@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Field, inputClass } from "@/components/form";
+import BrandImages from "./BrandImages";
 import { api } from "@/lib/api/client";
 import { errorMessages, loadError } from "@/lib/api/errors";
 import { notifyAuthChanged } from "@/lib/auth";
@@ -39,6 +40,8 @@ interface ProfileValues {
   bankHolder: string;
   businessType: string;
   businessItem: string;
+  logoImageId: number | null;
+  stampImageId: number | null;
   taxType: TaxMode;
 }
 
@@ -54,6 +57,8 @@ const EMPTY: ProfileValues = {
   bankHolder: "",
   businessType: "",
   businessItem: "",
+  logoImageId: null,
+  stampImageId: null,
   taxType: "WITHHOLDING_3_3",
 };
 
@@ -70,6 +75,8 @@ function valuesOf(p: Profile): ProfileValues {
     bankHolder: p.bankHolder ?? "",
     businessType: p.businessType ?? "",
     businessItem: p.businessItem ?? "",
+    logoImageId: p.logoImageId ?? null,
+    stampImageId: p.stampImageId ?? null,
     taxType: p.taxType,
   };
 }
@@ -499,6 +506,13 @@ function ProfileForm({
           />
         </Field>
       </div>
+
+      <BrandImages
+        logoImageId={v.logoImageId}
+        stampImageId={v.stampImageId}
+        nameHint={v.representative || v.name}
+        onChange={(patch) => set(patch)}
+      />
 
       <Field label="새 견적서의 기본 세금 방식">
         <select
