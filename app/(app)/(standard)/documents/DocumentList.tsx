@@ -138,6 +138,19 @@ export default function DocumentList() {
                       작성일 {formatDate(doc.issueDate)}
                     </p>
                   </div>
+                  {/* 공유 링크: 받는 분이 열어 봤으면 그 시각, 아직이면 "링크 공유 중" */}
+                  {doc.shared && (
+                    <span
+                      className="text-xs text-pen"
+                      title={
+                        doc.firstViewedAt
+                          ? `받는 분이 ${formatDateTimeShort(doc.firstViewedAt)}에 처음 열어 봤습니다`
+                          : "공유 링크가 켜져 있습니다"
+                      }
+                    >
+                      {doc.firstViewedAt ? "열어 봄" : "링크 공유 중"}
+                    </span>
+                  )}
                   <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
                     {STATUS_LABELS[doc.status]}
                   </span>

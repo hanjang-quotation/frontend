@@ -6,6 +6,7 @@ import type { Preset, PresetColumn } from "@/lib/preset/types";
 import type {
   ClientInput,
   DocumentResponse,
+  SharedDocument,
   DocumentUpdateRequest,
 } from "./types";
 
@@ -240,8 +241,11 @@ export function normalizeForm(
   };
 }
 
-/** 저장된 문서를 입력값으로 바꾼다 */
-export function formFromDocument(doc: DocumentResponse): DocumentForm {
+/** 저장된 문서(또는 공유 링크로 받은 문서)를 입력값으로 바꾼다 */
+export function formFromDocument(
+  doc: SharedDocument &
+    Partial<Pick<DocumentResponse, "profileId" | "clientId">>,
+): DocumentForm {
   const preset = doc.presetSnapshot;
   const client = doc.partySnapshot.client ?? {};
   const terms: Record<string, string> = {};
@@ -295,12 +299,12 @@ export function formFromDocument(doc: DocumentResponse): DocumentForm {
     };
   });
   return {
-    profileId: doc.profileId,
+    profileId: doc.profileId ?? null,
     title: doc.title,
     issueDate: doc.issueDate,
     validUntil: doc.validUntil ?? "",
     client: {
-      id: doc.clientId,
+      id: doc.clientId ?? null,
       name: client.name ?? "",
       contactName: client.contactName ?? "",
       phone: client.phone ?? "",

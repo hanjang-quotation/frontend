@@ -27,7 +27,7 @@ import {
   type QuantityOptionForm,
 } from "@/lib/document/form";
 import { clearDraft, saveDraft } from "@/lib/document/draft";
-import type { DocumentStatus } from "@/lib/document/types";
+import type { DocumentStatus, ShareInfo } from "@/lib/document/types";
 import { formatTime } from "@/lib/format";
 import {
   itemRequestFromLine,
@@ -42,6 +42,7 @@ import {
 } from "@/lib/party/types";
 import type { Preset, PresetColumn } from "@/lib/preset/types";
 import { ClientSection, SupplierSection } from "./PartyFields";
+import SharePanel from "./SharePanel";
 import StatusSelect from "./StatusSelect";
 
 // 견적서 작성·수정 화면 (TECH_SPEC 10.1).
@@ -61,6 +62,7 @@ export default function DocumentEditor({
   docNo,
   status,
   savedAt,
+  initialShare = null,
   keptSupplier,
   restoredDraft = false,
 }: {
@@ -77,6 +79,8 @@ export default function DocumentEditor({
   status?: DocumentStatus;
   /** 새 문서를 방금 저장하고 넘어왔을 때 그 시각. 저장 안내를 띄운 채로 시작한다 */
   savedAt?: string;
+  /** 저장된 문서의 공유 링크 상태 */
+  initialShare?: ShareInfo | null;
 }) {
   const router = useRouter();
   const [form, setForm] = useState(initial);
@@ -90,6 +94,9 @@ export default function DocumentEditor({
     Math.max(0, ...initial.groups.map((g) => g.id)) + 1,
   );
   const [tab, setTab] = useState<"edit" | "preview">("edit");
+  // 공유 링크 (저장된 문서만). 막대의 "공유 링크" 버튼으로 칸을 연다
+  const [share, setShare] = useState<ShareInfo | null>(initialShare);
+  const [shareOpen, setShareOpen] = useState(false);
 
   // 자주 쓰는 품목 (이 업종 것). 불러오지 못했으면(로그인 전 등) null 이고 버튼을 숨긴다
   const [savedItems, setSavedItems] = useState<SavedItem[] | null>(null);
@@ -1007,9 +1014,31 @@ export default function DocumentEditor({
                   >
                     PDF 내려받기
                   </a>
+                  <button
+                    type="button"
+                    onClick={() => setShareOpen((open) => !open)}
+                    aria-expanded={shareOpen}
+                    className="rounded-md border border-slate-300 bg-paper px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    공유 링크
+                    {share && (
+                      <span className="ml-1.5 text-xs font-normal text-pen">
+                        {share.firstViewedAt ? "열어 봄" : "켜짐"}
+                      </span>
+                    )}
+                  </button>
                 </div>
               )}
             </div>
+
+            {documentId !== undefined && shareOpen && (
+              <SharePanel
+                documentId={documentId}
+                share={share}
+                onChange={setShare}
+                dirty={dirty}
+              />
+            )}
 
             <DocumentPreview
               preset={preset}

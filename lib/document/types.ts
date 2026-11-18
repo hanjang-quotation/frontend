@@ -119,9 +119,32 @@ export interface DocumentResponse {
   /** 가산 항목. rate 는 % */
   surcharges: { key: string; label: string; rate: number; amount: number }[];
   amounts: DocumentAmounts;
+  /** 공유 링크 상태. 공유하지 않았으면 null */
+  share: ShareInfo | null;
   createdAt: string;
   updatedAt: string;
 }
+
+/** 공유 링크. 주소는 /s/{token} */
+export interface ShareInfo {
+  token: string;
+  sharedAt: string;
+  /** 받는 사람이 처음·마지막으로 연 시각. 아직이면 null (작성자 본인이 연 것은 세지 않는다) */
+  firstViewedAt: string | null;
+  lastViewedAt: string | null;
+}
+
+/** 공유 링크로 보는 문서. 받는 사람에게 필요한 내용만 있다 */
+export type SharedDocument = Omit<
+  DocumentResponse,
+  | "id"
+  | "status"
+  | "profileId"
+  | "clientId"
+  | "share"
+  | "createdAt"
+  | "updatedAt"
+>;
 
 /** 목록의 한 줄 */
 export interface DocumentSummary {
@@ -134,6 +157,10 @@ export interface DocumentSummary {
   issueDate: string;
   totalAmount: number;
   updatedAt: string;
+  /** 공유 링크가 켜져 있는지 */
+  shared: boolean;
+  /** 받는 사람이 공유 링크를 처음 연 시각 */
+  firstViewedAt: string | null;
 }
 
 /** 목록 응답. page 는 0부터 */

@@ -7,6 +7,8 @@ import type {
   DocumentSummary,
   DocumentUpdateRequest,
   PageResponse,
+  ShareInfo,
+  SharedDocument,
 } from "@/lib/document/types";
 import type {
   Client,
@@ -227,5 +229,19 @@ export const api = {
       }),
     remove: (id: number) =>
       apiFetch<void>(`/documents/${id}`, { method: "DELETE" }),
+    /** 공유 링크 켜기. 이미 켜져 있으면 같은 주소 */
+    share: (id: number) =>
+      apiFetch<ShareInfo>(`/documents/${id}/share`, { method: "POST" }),
+    /** 공유 링크 끄기. 다시 켜면 새 주소가 된다 */
+    unshare: (id: number) =>
+      apiFetch<void>(`/documents/${id}/share`, { method: "DELETE" }),
+  },
+
+  /** 로그인 없이 쓰는 주소 (공유 링크) */
+  shared: {
+    get: (token: string) =>
+      apiFetch<SharedDocument>(
+        `/public/documents/${encodeURIComponent(token)}`,
+      ),
   },
 };
