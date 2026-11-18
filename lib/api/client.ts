@@ -45,6 +45,8 @@ export interface Me {
   plan: string;
   /** 지금 버전의 이용약관·개인정보 수집·이용에 동의했는지. false 면 동의 화면(/welcome)으로 보낸다 */
   agreed: boolean;
+  /** 유료 기능(엑셀·문서 변환·로고·사진)을 쓸 수 있는지. 결제를 붙이기 전에는 모두에게 열려 있다 */
+  canUsePaid: boolean;
 }
 
 export type Provider = "KAKAO" | "GOOGLE";

@@ -97,6 +97,8 @@ export default function DocumentEditor({
   // 공유 링크 (저장된 문서만). 막대의 "공유 링크" 버튼으로 칸을 연다
   const [share, setShare] = useState<ShareInfo | null>(initialShare);
   const [shareOpen, setShareOpen] = useState(false);
+  /** 유료 기능을 쓸 수 있는지 (/api/me). 모르는 동안은 막지 않는다 (서버가 다시 확인한다) */
+  const [canUsePaid, setCanUsePaid] = useState<boolean | null>(null);
 
   // 자주 쓰는 품목 (이 업종 것). 불러오지 못했으면(로그인 전 등) null 이고 버튼을 숨긴다
   const [savedItems, setSavedItems] = useState<SavedItem[] | null>(null);
@@ -215,6 +217,10 @@ export default function DocumentEditor({
     );
     api.clients.list().then(setClients, () => setClients([]));
     api.items.list(preset.code).then(setSavedItems, () => setSavedItems(null));
+    api.me().then(
+      (me) => setCanUsePaid(me?.canUsePaid ?? false),
+      () => setCanUsePaid(false),
+    );
   }, [preset]);
 
   const totals = formTotals(form, preset);
@@ -562,6 +568,28 @@ export default function DocumentEditor({
         </div>
       </li>
     );
+  }
+
+  /**
+   * 내려받기(PDF·엑셀) 전에 확인한다. 파일은 서버에 저장된 내용으로 만들어지므로 저장하지 않은 수정이 있으면 막고,
+   * 유료 기능인데 쓸 수 없으면 안내한다
+   */
+  function guardDownload(
+    e: React.MouseEvent<HTMLAnchorElement>,
+    what: string,
+    paid = false,
+  ) {
+    let message: string | null = null;
+    if (paid && canUsePaid === false) {
+      message = `${what} 내려받기는 유료 요금제에서 쓸 수 있습니다.`;
+    } else if (dirty) {
+      message = `저장하지 않은 수정 내용이 있습니다. 저장한 뒤 ${what}${what === "엑셀" ? "을" : "를"} 내려받아 주세요.`;
+    }
+    if (!message) return;
+    e.preventDefault();
+    clearStatusOnHide.current = true;
+    setSave({ kind: "error", messages: [message] });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function handleSave() {
@@ -998,21 +1026,19 @@ export default function DocumentEditor({
                   {/* PDF 는 서버에 저장된 내용으로 만들어지므로, 저장하지 않은 수정이 있으면 막는다 */}
                   <a
                     href={`/api/documents/${documentId}/pdf`}
-                    onClick={(e) => {
-                      if (!dirty) return;
-                      e.preventDefault();
-                      clearStatusOnHide.current = true;
-                      setSave({
-                        kind: "error",
-                        messages: [
-                          "저장하지 않은 수정 내용이 있습니다. 저장한 뒤 PDF를 내려받아 주세요.",
-                        ],
-                      });
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
+                    onClick={(e) => guardDownload(e, "PDF")}
                     className="rounded-md border border-slate-300 bg-paper px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
                   >
                     PDF 내려받기
+                  </a>
+                  {/* 엑셀은 유료 기능. 결제 전에는 모두에게 열려 있고(canUsePaid), 잠기면 안내만 한다 */}
+                  <a
+                    href={`/api/documents/${documentId}/xlsx`}
+                    onClick={(e) => guardDownload(e, "엑셀", true)}
+                    className="rounded-md border border-slate-300 bg-paper px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    엑셀 내려받기
+                    <ProBadge />
                   </a>
                   <button
                     type="button"
@@ -1184,6 +1210,18 @@ function SelectWithCustom({
         />
       )}
     </div>
+  );
+}
+
+/** 유료 기능 표시 */
+function ProBadge() {
+  return (
+    <span
+      className="ml-1.5 rounded bg-pen-soft px-1 py-px text-[10px] font-semibold tracking-wide text-pen"
+      title="유료 요금제 기능 (지금은 무료로 열려 있습니다)"
+    >
+      PRO
+    </span>
   );
 }
 
