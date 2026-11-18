@@ -62,3 +62,27 @@ body {
     animation: none;
   }
 }
+
+/*
+ * 누를 수 있는 것에는 손가락 커서를 보인다. Tailwind 4 는 버튼의 기본 커서를 화살표로 두므로 여기서 한 번에 정한다.
+ * (링크 <a> 는 브라우저가 이미 손가락 커서를 쓴다.) 누를 수 없는 상태(disabled)는 "안 됨" 커서
+ */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  select:not(:disabled),
+  summary,
+  label:has(> input[type="checkbox"]:not(:disabled)),
+  label:has(> input[type="radio"]:not(:disabled)),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="date"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  select:disabled {
+    cursor: not-allowed;
+  }
+}
