@@ -147,7 +147,7 @@ function ImageSlot({
           onClick={() => input.current?.click()}
           className="font-medium text-pen hover:text-pen-deep disabled:opacity-60"
         >
-          {busy ? "올리는 중…" : imageId ? "바꾸기" : "이미지 올리기"}
+          {busy ? "올리는 중…" : imageId ? "변경하기" : "이미지 올리기"}
         </button>
         {imageId && (
           <button
@@ -155,7 +155,7 @@ function ImageSlot({
             onClick={() => onChange(null)}
             className="text-slate-500 hover:text-red-700"
           >
-            빼기
+            삭제하기
           </button>
         )}
       </div>

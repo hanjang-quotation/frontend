@@ -92,15 +92,16 @@ export default function DocumentPreview({
   return (
     <article className="rounded-xl border border-rule bg-paper p-6 text-[13px] leading-relaxed text-slate-800 shadow-sm sm:p-8">
       <header className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-slate-800 pb-4">
-        <div>
+        {/* 로고는 제목 왼쪽 같은 줄에 (PDF 와 같게) */}
+        <div className="flex items-center gap-4">
           {logoId != null && (
             <img
               src={imageSrc(logoId)}
               alt="로고"
-              className="mb-2 max-h-12 max-w-[180px] object-contain"
+              className="max-h-10 max-w-[150px] object-contain"
             />
           )}
-          <h2 className="text-2xl font-bold tracking-[0.3em] text-ink">
+          <h2 className="text-2xl font-bold tracking-[0.3em] whitespace-nowrap text-ink">
             {heading}
           </h2>
         </div>
