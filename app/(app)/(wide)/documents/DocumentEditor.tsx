@@ -271,6 +271,12 @@ export default function DocumentEditor({
     : form.profileId === null
       ? partyView(keptSupplier)
       : partyView(null);
+  // 거래명세서의 공급자 표는 칸별 원래 값을 쓴다
+  const supplierFields: PartyFields | null = selectedProfile
+    ? selectedProfile
+    : form.profileId === null
+      ? (keptSupplier ?? null)
+      : null;
 
   const change = (patch: Partial<DocumentForm>) =>
     setForm((prev) => ({ ...prev, ...patch }));
@@ -1281,6 +1287,7 @@ export default function DocumentEditor({
               totals={totals}
               docNo={docNo}
               supplier={supplier}
+              supplierFields={supplierFields}
               docType={docType}
             />
           </div>

@@ -1,5 +1,5 @@
 import { formatWon, type Totals } from "@/lib/calc";
-import { formatDate } from "@/lib/format";
+import { formatDate, koreanAmountSentence } from "@/lib/format";
 import { Fragment } from "react";
 import {
   filledOptions,
@@ -15,7 +15,7 @@ import {
   DOC_TYPE_LABELS,
   type DocType,
 } from "@/lib/document/types";
-import { partyView, type PartyView } from "@/lib/party/types";
+import { partyView, type PartyFields, type PartyView } from "@/lib/party/types";
 import type { Preset } from "@/lib/preset/types";
 
 // 작성 화면 오른쪽의 실시간 미리보기. 입력값을 견적서 모양으로 그리기만 한다.
@@ -27,6 +27,7 @@ export default function DocumentPreview({
   totals,
   docNo,
   supplier,
+  supplierFields = null,
   docType = "ESTIMATE",
 }: {
   preset: Preset;
@@ -35,6 +36,8 @@ export default function DocumentPreview({
   docNo?: string;
   /** 공급자 칸. 고른 내 정보 또는 문서에 남아 있는 공급자 */
   supplier: PartyView;
+  /** 공급자 스냅샷 원래 값 (거래명세서의 공급자 표에 칸별로 쓴다) */
+  supplierFields?: PartyFields | null;
   /** 문서 종류. 제목과 날짜 칸 이름이 달라진다 (거래명세서는 두 번째 날짜가 없다) */
   docType?: DocType;
 }) {
@@ -106,55 +109,158 @@ export default function DocumentPreview({
         </dl>
       </header>
 
-      <section className="mt-5 grid gap-4 sm:grid-cols-2">
-        <div>
-          <h3 className="text-xs font-semibold text-slate-500">받는 분</h3>
-          <p className="mt-1 text-base font-semibold text-ink">
-            {receiver.name ? `${receiver.name} 귀하` : "거래처 이름"}
+      {docType === "STATEMENT" ? (
+        <>
+          {/* 거래명세서: 공급받는자 | 공급자 표 (PDF statement-a4 와 같은 칸) */}
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <PartyGrid
+              title="공급받는자"
+              rows={[
+                ["등록번호", form.client.businessNo],
+                [
+                  "상호",
+                  form.client.name.trim() ? `${form.client.name} 귀하` : "",
+                ],
+                ["주소", form.client.address],
+                ["담당자", form.client.contactName],
+                ["연락처", form.client.phone],
+                ["이메일", form.client.email],
+              ]}
+            />
+            <PartyGrid
+              title="공급자"
+              rows={[
+                ["등록번호", supplierFields?.businessNo],
+                ["상호", supplierFields?.name],
+                ["성명", supplierFields?.representative],
+                ["주소", supplierFields?.address],
+                ["업태", supplierFields?.businessType],
+                ["종목", supplierFields?.businessItem],
+                [
+                  "연락처",
+                  [supplierFields?.phone, supplierFields?.email]
+                    .filter(Boolean)
+                    .join(" · "),
+                ],
+              ]}
+            />
+          </div>
+          <AmountInWords
+            label="합계 금액"
+            total={totals.totalAmount}
+            vat={taxMode === "VAT_10"}
+          />
+          <p className="mt-3 text-slate-600">
+            건명{" "}
+            <span className="font-semibold text-ink">
+              {form.title.trim() || "-"}
+            </span>
           </p>
-          {receiver.details && (
-            <p className="text-slate-600">{receiver.details}</p>
-          )}
-        </div>
-        <div>
-          <h3 className="text-xs font-semibold text-slate-500">공급자</h3>
-          {supplier.name ? (
-            <>
+        </>
+      ) : (
+        <>
+          <section className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div>
+              <h3 className="text-xs font-semibold text-slate-500">받는 분</h3>
               <p className="mt-1 text-base font-semibold text-ink">
-                {supplier.name}
+                {receiver.name ? `${receiver.name} 귀하` : "거래처 이름"}
               </p>
-              {supplier.details && (
-                <p className="text-slate-600">{supplier.details}</p>
+              {receiver.details && (
+                <p className="text-slate-600">{receiver.details}</p>
               )}
-              {supplier.bank && (
-                <p className="text-slate-600">입금 계좌 {supplier.bank}</p>
+            </div>
+            <div>
+              <h3 className="text-xs font-semibold text-slate-500">공급자</h3>
+              {supplier.name ? (
+                <>
+                  <p className="mt-1 text-base font-semibold text-ink">
+                    {supplier.name}
+                  </p>
+                  {supplier.details && (
+                    <p className="text-slate-600">{supplier.details}</p>
+                  )}
+                  {supplier.bank && (
+                    <p className="text-slate-600">입금 계좌 {supplier.bank}</p>
+                  )}
+                </>
+              ) : (
+                <p className="mt-1 text-slate-400">
+                  내 정보를 고르면 상호·연락처·입금 계좌가 들어갑니다.
+                </p>
               )}
+            </div>
+          </section>
+
+          {docType === "INVOICE" ? (
+            <>
+              {/* 청구서: 청구 문구와 청구 금액·입금 기한·입금 계좌 (PDF invoice-a4) */}
+              <p className="mt-5 text-sm text-ink">아래와 같이 청구합니다.</p>
+              <table className="mt-2 w-full border-collapse border-[1.5px] border-pen text-sm">
+                <tbody>
+                  <tr className="border-b border-pen-soft">
+                    <th className="w-24 bg-pen-soft px-3 py-2 font-semibold text-pen-deep">
+                      청구 금액
+                    </th>
+                    <td className="px-3 py-2">
+                      <span className="text-base font-bold text-ink">
+                        {koreanAmountSentence(totals.totalAmount)}
+                      </span>{" "}
+                      <span className="text-xs text-slate-500 tabular-nums">
+                        (₩{totals.totalAmount.toLocaleString("ko-KR")})
+                        {taxMode === "VAT_10" && " 부가세 포함"}
+                      </span>
+                    </td>
+                  </tr>
+                  {form.validUntil && dateLabels.until && (
+                    <tr className="border-b border-pen-soft">
+                      <th className="bg-pen-soft px-3 py-2 font-semibold text-pen-deep">
+                        {dateLabels.until}
+                      </th>
+                      <td className="px-3 py-2 font-semibold text-ink tabular-nums">
+                        {formatDate(form.validUntil)}까지
+                      </td>
+                    </tr>
+                  )}
+                  {supplier.bank && (
+                    <tr>
+                      <th className="bg-pen-soft px-3 py-2 font-semibold text-pen-deep">
+                        입금 계좌
+                      </th>
+                      <td className="px-3 py-2 font-semibold text-ink">
+                        {supplier.bank}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              <p className="mt-3 text-slate-600">
+                건명{" "}
+                <span className="font-semibold text-ink">
+                  {form.title.trim() || "-"}
+                </span>
+              </p>
             </>
           ) : (
-            <p className="mt-1 text-slate-400">
-              내 정보를 고르면 상호·연락처·입금 계좌가 들어갑니다.
-            </p>
+            <section className="mt-5 rounded-lg bg-slate-50 px-4 py-3">
+              <p className="text-slate-600">
+                건명{" "}
+                <span className="font-semibold text-ink">
+                  {form.title.trim() || "-"}
+                </span>
+              </p>
+              <p className="mt-1 text-lg font-bold text-ink tabular-nums">
+                {taxMode === "WITHHOLDING_3_3" ? "청구 금액" : "합계 금액"}{" "}
+                {formatWon(totals.totalAmount)}
+                {taxMode === "VAT_10" && (
+                  <span className="ml-1 text-xs font-normal text-slate-500">
+                    (부가세 포함)
+                  </span>
+                )}
+              </p>
+            </section>
           )}
-        </div>
-      </section>
-
-      <section className="mt-5 rounded-lg bg-slate-50 px-4 py-3">
-        <p className="text-slate-600">
-          건명{" "}
-          <span className="font-semibold text-ink">
-            {form.title.trim() || "-"}
-          </span>
-        </p>
-        <p className="mt-1 text-lg font-bold text-ink tabular-nums">
-          {taxMode === "WITHHOLDING_3_3" ? "청구 금액" : "합계 금액"}{" "}
-          {formatWon(totals.totalAmount)}
-          {taxMode === "VAT_10" && (
-            <span className="ml-1 text-xs font-normal text-slate-500">
-              (부가세 포함)
-            </span>
-          )}
-        </p>
-      </section>
+        </>
+      )}
 
       <table className="mt-5 w-full border-collapse">
         <thead>
@@ -343,6 +449,68 @@ export default function DocumentPreview({
       <p className="mt-8 text-[11px] text-slate-400">
         참고용 계산이며 실제 세액은 다를 수 있습니다.
       </p>
+
+      {docType === "STATEMENT" && (
+        <p className="mt-4 text-right text-sm text-ink">
+          위 금액을 정히 인수합니다. 인수자
+          <span className="mx-2 inline-block w-32 border-b border-slate-500" />
+          (인)
+        </p>
+      )}
     </article>
+  );
+}
+
+/** 거래명세서의 공급받는자·공급자 칸 (이름 | 값 표). 빈 값은 빈 칸으로 둔다 */
+function PartyGrid({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: [string, string | null | undefined][];
+}) {
+  return (
+    <table className="w-full border-collapse border border-slate-400 text-xs">
+      <caption className="border border-b-0 border-slate-400 bg-slate-50 py-1 text-center font-semibold text-ink">
+        {title}
+      </caption>
+      <tbody>
+        {rows.map(([label, value]) => (
+          <tr key={label} className="border-b border-slate-200">
+            <th className="w-16 border-r border-slate-200 bg-slate-50 px-2 py-1 text-center font-normal text-slate-600">
+              {label}
+            </th>
+            <td className="px-2 py-1 text-ink">{value?.trim() || ""}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+/** 합계를 한글로 쓴 줄: "합계 금액 | 일금 오백육만원정 (₩5,060,000)" */
+function AmountInWords({
+  label,
+  total,
+  vat,
+}: {
+  label: string;
+  total: number;
+  vat: boolean;
+}) {
+  return (
+    <div className="mt-3 flex items-center border border-slate-400 text-sm">
+      <span className="w-24 shrink-0 self-stretch border-r border-slate-200 bg-slate-50 px-3 py-2 text-center text-slate-600">
+        {label}
+      </span>
+      <span className="px-3 py-2">
+        <span className="text-base font-bold text-ink">
+          {koreanAmountSentence(total)}
+        </span>{" "}
+        <span className="text-xs text-slate-500 tabular-nums">
+          (₩{total.toLocaleString("ko-KR")}){vat && " 부가세 포함"}
+        </span>
+      </span>
+    </div>
   );
 }

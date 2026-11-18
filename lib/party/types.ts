@@ -14,6 +14,9 @@ export interface Profile {
   bankName: string | null;
   bankAccount: string | null;
   bankHolder: string | null;
+  /** 업태·종목 (거래명세서의 공급자 칸) */
+  businessType: string | null;
+  businessItem: string | null;
   /** 새 문서의 기본 세금 방식 */
   taxType: TaxMode;
   isDefault: boolean;
@@ -29,6 +32,8 @@ export interface ProfileRequest {
   bankName?: string;
   bankAccount?: string;
   bankHolder?: string;
+  businessType?: string;
+  businessItem?: string;
   taxType?: TaxMode;
   /** true 면 이 내 정보를 기본으로 한다 */
   isDefault?: boolean;
@@ -77,7 +82,9 @@ export type PartyFields = Partial<
     | "address"
     | "bankName"
     | "bankAccount"
-    | "bankHolder",
+    | "bankHolder"
+    | "businessType"
+    | "businessItem",
     string | null
   >
 >;

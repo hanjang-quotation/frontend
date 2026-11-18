@@ -57,3 +57,47 @@ export function formatPhone(value: string): string {
   if (s.length <= 10) return `${s.slice(0, 3)}-${s.slice(3, 6)}-${s.slice(6)}`;
   return `${s.slice(0, 3)}-${s.slice(3, 7)}-${s.slice(7)}`;
 }
+
+const KOREAN_DIGITS = [
+  "",
+  "일",
+  "이",
+  "삼",
+  "사",
+  "오",
+  "육",
+  "칠",
+  "팔",
+  "구",
+];
+const KOREAN_SMALL_UNITS = ["", "십", "백", "천"];
+const KOREAN_BIG_UNITS = ["", "만", "억", "조", "경"];
+
+/**
+ * 금액을 한글로: 5,060,000 → "오백육만". 십·백·천 앞에도 "일"을 붙인다 (1,100,000 → 일백일십만).
+ * 백엔드 common/KoreanAmount.words 와 결과가 같아야 한다
+ */
+export function koreanAmount(amount: number): string {
+  if (amount === 0) return "영";
+  if (amount < 0) return `마이너스 ${koreanAmount(-amount)}`;
+  let result = "";
+  let rest = Math.floor(amount);
+  for (let big = 0; rest > 0; big++) {
+    const group = rest % 10_000;
+    if (group > 0) {
+      let text = "";
+      for (let unit = 3; unit >= 0; unit--) {
+        const digit = Math.floor(group / 10 ** unit) % 10;
+        if (digit > 0) text += KOREAN_DIGITS[digit] + KOREAN_SMALL_UNITS[unit];
+      }
+      result = text + KOREAN_BIG_UNITS[big] + result;
+    }
+    rest = Math.floor(rest / 10_000);
+  }
+  return result;
+}
+
+/** 문서에 쓰는 꼴: "일금 오백육만원정" */
+export function koreanAmountSentence(amount: number): string {
+  return `일금 ${koreanAmount(amount)}원정`;
+}

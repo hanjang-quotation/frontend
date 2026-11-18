@@ -37,6 +37,8 @@ interface ProfileValues {
   bankName: string;
   bankAccount: string;
   bankHolder: string;
+  businessType: string;
+  businessItem: string;
   taxType: TaxMode;
 }
 
@@ -50,6 +52,8 @@ const EMPTY: ProfileValues = {
   bankName: "",
   bankAccount: "",
   bankHolder: "",
+  businessType: "",
+  businessItem: "",
   taxType: "WITHHOLDING_3_3",
 };
 
@@ -64,6 +68,8 @@ function valuesOf(p: Profile): ProfileValues {
     bankName: p.bankName ?? "",
     bankAccount: p.bankAccount ?? "",
     bankHolder: p.bankHolder ?? "",
+    businessType: p.businessType ?? "",
+    businessItem: p.businessItem ?? "",
     taxType: p.taxType,
   };
 }
@@ -442,7 +448,29 @@ function ProfileForm({
             placeholder="예: 서울시 마포구 ○○로 12"
           />
         </Field>
+        <Field label="업태 (선택)">
+          <input
+            className={inputClass}
+            value={v.businessType}
+            maxLength={50}
+            onChange={(e) => set({ businessType: e.target.value })}
+            placeholder="예: 서비스업"
+          />
+        </Field>
+        <Field label="종목 (선택)">
+          <input
+            className={inputClass}
+            value={v.businessItem}
+            maxLength={100}
+            onChange={(e) => set({ businessItem: e.target.value })}
+            placeholder="예: 소프트웨어 개발"
+          />
+        </Field>
       </div>
+      <p className="-mt-1 text-xs text-slate-500">
+        업태·종목은 사업자등록증에 적힌 대로 넣으면 거래명세서의 공급자 칸에
+        나옵니다.
+      </p>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Field label="은행">
