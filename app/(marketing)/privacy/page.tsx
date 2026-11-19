@@ -140,7 +140,7 @@ export default function PrivacyPage() {
               "위 1번의 모든 항목",
             ],
             [
-              "NVIDIA Corporation (privacy@nvidia.com)",
+              "Anthropic PBC (privacy@anthropic.com)",
               "미국",
               "AI 로 가져오기에서 올린 파일을 AI 로 읽기 (회원이 사용할 때만)",
               "회원이 올린 파일 (사진·PDF·엑셀 등)",
@@ -152,10 +152,11 @@ export default function PrivacyPage() {
           있습니다. 이 경우 서비스를 이용할 수 없습니다.
         </p>
         <p>
-          AI 로 가져오기는 회원이 파일을 올리고 동의할 때만 NVIDIA 로 보냅니다.
-          지금 쓰는 무료 체험 서비스에서는 보낸 내용이 NVIDIA 의 약관에 따라
-          처리되므로, 꼭 필요하지 않은 개인정보는 가리고 올리도록 안내합니다. 이
-          기능을 쓰지 않으면 NVIDIA 로 보내지 않습니다.
+          AI 로 가져오기는 회원이 파일을 올리고 동의할 때만 Anthropic 의
+          AI(Claude) 로 보냅니다. Anthropic 은 API 로 받은 내용을 AI 학습에 쓰지
+          않으며, 운영자도 올린 파일과 읽은 내용을 저장하지 않습니다. 그래도 꼭
+          필요하지 않은 개인정보는 가리고 올리도록 안내합니다. 이 기능을 쓰지
+          않으면 Anthropic 으로 보내지 않습니다.
         </p>
       </Article>
 
