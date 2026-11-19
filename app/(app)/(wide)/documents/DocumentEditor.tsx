@@ -1,5 +1,6 @@
 "use client";
 
+import ProBadge from "@/components/ProBadge";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -127,6 +128,12 @@ export default function DocumentEditor({
   } | null>(null);
   /** 유료 기능을 쓸 수 있는지 (/api/me). 모르는 동안은 막지 않는다 (서버가 다시 확인한다) */
   const [canUsePaid, setCanUsePaid] = useState<boolean | null>(null);
+  /** 무료 제한(결제 뒤에만): 이번 달 새 문서 저장 건수, PDF 아래 문구 (/api/me) */
+  const [plan, setPlan] = useState<{
+    freeLimits: boolean;
+    documentLimit: number | null;
+    documentsUsed: number | null;
+  } | null>(null);
 
   // 자주 쓰는 품목 (이 업종 것). 불러오지 못했으면(로그인 전 등) null 이고 버튼을 숨긴다
   const [savedItems, setSavedItems] = useState<SavedItem[] | null>(null);
@@ -248,7 +255,18 @@ export default function DocumentEditor({
     api.clients.list().then(setClients, () => setClients([]));
     api.items.list(preset.code).then(setSavedItems, () => setSavedItems(null));
     api.me().then(
-      (me) => setCanUsePaid(me?.canUsePaid ?? false),
+      (me) => {
+        setCanUsePaid(me?.canUsePaid ?? false);
+        setPlan(
+          me
+            ? {
+                freeLimits: me.freeLimits,
+                documentLimit: me.documentLimit,
+                documentsUsed: me.documentsUsed,
+              }
+            : null,
+        );
+      },
       () => setCanUsePaid(false),
     );
   }, [preset]);
@@ -787,14 +805,32 @@ export default function DocumentEditor({
             <StatusSelect documentId={documentId} initialStatus={status} />
           )}
         </div>
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={save.kind === "saving"}
-          className="rounded-md bg-pen px-4 py-2 text-sm font-medium text-white hover:bg-pen-deep disabled:opacity-60"
-        >
-          {save.kind === "saving" ? "저장 중…" : "저장"}
-        </button>
+        <div className="flex items-center gap-3">
+          {/* 무료 요금제의 새 문서 저장 건수 (결제를 붙인 뒤에만 나온다). 이미 저장한 문서를 고치는 것은 세지 않는다 */}
+          {documentId === undefined &&
+            plan?.documentLimit != null &&
+            plan.documentsUsed != null && (
+              <Link
+                href="/pricing"
+                className="text-xs text-slate-500 hover:text-pen"
+                title="PRO 요금제는 저장 건수 제한이 없습니다"
+              >
+                이번 달 무료 저장{" "}
+                <span className="tabular-nums">
+                  {plan.documentsUsed}/{plan.documentLimit}
+                </span>
+                건
+              </Link>
+            )}
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={save.kind === "saving"}
+            className="rounded-md bg-pen px-4 py-2 text-sm font-medium text-white hover:bg-pen-deep disabled:opacity-60"
+          >
+            {save.kind === "saving" ? "저장 중…" : "저장"}
+          </button>
+        </div>
       </div>
 
       {showRestored && save.kind === "idle" && (
@@ -1310,6 +1346,7 @@ export default function DocumentEditor({
               supplier={supplier}
               supplierFields={supplierFields}
               docType={docType}
+              freeLimits={plan?.freeLimits ?? false}
             />
           </div>
         </div>
@@ -1451,18 +1488,6 @@ function SelectWithCustom({
         />
       )}
     </div>
-  );
-}
-
-/** 유료 기능 표시 */
-function ProBadge() {
-  return (
-    <span
-      className="ml-1.5 rounded bg-pen-soft px-1 py-px text-[10px] font-semibold tracking-wide text-pen"
-      title="유료 요금제 기능 (지금은 무료로 열려 있습니다)"
-    >
-      PRO
-    </span>
   );
 }
 

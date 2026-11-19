@@ -98,6 +98,7 @@ function Loaded({ doc, token }: { doc: SharedDocument; token: string }) {
           `/api/public/documents/${encodeURIComponent(token)}/images/${id}`
         }
         docType={doc.docType}
+        freeLimits={doc.freeLimits}
       />
     </>
   );

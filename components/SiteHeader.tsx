@@ -42,6 +42,9 @@ export default function SiteHeader({
           >
             내 정보
           </Link>
+          <Link href="/pricing" className="hidden hover:text-ink sm:inline">
+            요금제
+          </Link>
           <AuthMenu />
         </nav>
       </div>

@@ -3,6 +3,7 @@
 import { formatWon, type Totals } from "@/lib/calc";
 import { formatDate, koreanAmountSentence } from "@/lib/format";
 import { imageUrl } from "@/lib/image";
+import { SITE } from "@/lib/site";
 import { Fragment } from "react";
 import {
   filledOptions,
@@ -33,6 +34,7 @@ export default function DocumentPreview({
   supplierFields = null,
   imageSrc = imageUrl,
   docType = "ESTIMATE",
+  freeLimits = false,
 }: {
   preset: Preset;
   form: DocumentForm;
@@ -46,11 +48,13 @@ export default function DocumentPreview({
   imageSrc?: (id: number) => string;
   /** 문서 종류. 제목과 날짜 칸 이름이 달라진다 (거래명세서는 두 번째 날짜가 없다) */
   docType?: DocType;
+  /** 무료 제한이 걸린 문서: PDF 처럼 아래에 "바로 한장으로 작성했습니다" 문구를 넣고 로고(유료 기능)를 뺀다 */
+  freeLimits?: boolean;
 }) {
   const { taxMode } = form;
   const heading = DOC_TYPE_LABELS[docType];
   const dateLabels = DOC_DATE_LABELS[docType];
-  const logoId = supplierFields?.logoImageId ?? null;
+  const logoId = freeLimits ? null : (supplierFields?.logoImageId ?? null);
   const stampId = supplierFields?.stampImageId ?? null;
   const receiver = partyView(form.client);
   const filledTerms = preset.termFields.filter(
@@ -492,6 +496,12 @@ export default function DocumentPreview({
           위 금액을 정히 인수합니다. 인수자
           <span className="mx-2 inline-block w-32 border-b border-slate-500" />
           (인)
+        </p>
+      )}
+
+      {freeLimits && (
+        <p className="mt-6 text-[11px] text-slate-400">
+          {SITE.brandFooter} · {SITE.url.replace(/^https?:\/\//, "")}
         </p>
       )}
     </article>
