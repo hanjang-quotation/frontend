@@ -805,7 +805,7 @@ export default function DocumentEditor({
           <span>
             {restoredFrom === "ai" ? (
               <>
-                사진에서 AI 로 읽어 왔습니다.{" "}
+                올린 파일을 AI 로 읽어 왔습니다.{" "}
                 <strong>
                   잘못 읽은 곳이 있을 수 있으니 거래처·수량·단가를 꼭 확인하고
                 </strong>{" "}
@@ -813,7 +813,7 @@ export default function DocumentEditor({
                 {printedTotal != null &&
                   printedTotal !== totals.totalAmount && (
                     <span className="mt-1 block text-red-700">
-                      사진에 적힌 합계 {formatWon(printedTotal)}와 다시 계산한
+                      파일에 적힌 합계 {formatWon(printedTotal)}와 다시 계산한
                       합계 {formatWon(totals.totalAmount)}가 다릅니다. 품목과
                       세금 방식을 확인해 주세요.
                     </span>

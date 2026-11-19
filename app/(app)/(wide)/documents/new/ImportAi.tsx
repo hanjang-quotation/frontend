@@ -11,12 +11,18 @@ import { formFromDocument } from "@/lib/document/form";
 import { shrinkPhoto } from "@/lib/image";
 import { industries } from "@/lib/preset/industries";
 
+/** 올릴 수 있는 파일. 형식은 서버가 파일 머리로 다시 확인한다 */
+const ACCEPT =
+  "image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,application/pdf,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.csv,text/csv";
+/** 서버 상한 (사진은 올리기 전에 줄이므로 사진이 아닌 파일만 미리 본다) */
+const MAX_BYTES = 8 * 1024 * 1024;
+
 /**
- * 사진으로 가져오기: 업종을 고르고 견적서 사진을 올리면 AI(NVIDIA API)가 읽어
+ * AI 로 가져오기: 업종을 고르고 견적서 파일(사진·PDF·엑셀·CSV)을 올리면 AI(NVIDIA API)가 읽어
  * 저장하지 않은 견적서를 만든다. 임시 보관본(origin ai)으로 넣고 작성 화면을 연다. 사용자가 확인하고 저장한다.
- * 사진을 외부 AI 로 보내므로 동의를 받는다. 무료는 하루 1건 (서버가 센다)
+ * 파일을 외부 AI 로 보내므로 동의를 받는다. 무료는 하루 1건 (서버가 센다)
  */
-export default function ImportPhoto() {
+export default function ImportAi() {
   const router = useRouter();
   const ready = industries.filter((i) => i.ready);
   const [preset, setPreset] = useState(ready[0]?.code ?? "freelancer");
@@ -43,8 +49,17 @@ export default function ImportPhoto() {
     setBusy(true);
     setError(null);
     try {
-      const photo = await shrinkPhoto(file);
-      const result = await api.ai.importImage(photo, preset);
+      const isImage = file.type.startsWith("image/");
+      if (!isImage && file.size > MAX_BYTES) {
+        throw new Error("파일은 8MB 까지 올릴 수 있습니다.");
+      }
+      // 사진은 줄여서 JPEG 로, 나머지(PDF·엑셀·CSV)는 그대로
+      const upload = isImage ? await shrinkPhoto(file) : file;
+      const result = await api.ai.importFile(
+        upload,
+        isImage ? "photo.jpg" : file.name,
+        preset,
+      );
       const form = {
         ...formFromDocument(result.document),
         profileId: undefined,
@@ -61,7 +76,7 @@ export default function ImportPhoto() {
                 messages: [
                   e instanceof Error
                     ? e.message
-                    : "사진을 처리하지 못했습니다.",
+                    : "파일을 처리하지 못했습니다.",
                 ],
               },
       );
@@ -76,9 +91,12 @@ export default function ImportPhoto() {
   return (
     <div className="rounded-xl border border-rule bg-paper p-5">
       <p className="text-sm text-slate-700">
-        종이 견적서나 다른 프로그램으로 만든 견적서를 찍어 올리면 AI 가
-        거래처·건명· 품목·금액을 읽어 작성 화면에 채워 줍니다. 바로 저장하지
+        종이 견적서 사진이나 다른 프로그램으로 만든 견적서 파일을 올리면 AI 가
+        거래처·건명·품목·금액을 읽어 작성 화면에 채워 줍니다. 바로 저장하지
         않으니 확인하고 저장하세요.
+      </p>
+      <p className="mt-1 text-xs text-slate-500">
+        사진(JPG·PNG), PDF(앞 3쪽까지), 엑셀(.xlsx), CSV 를 올릴 수 있습니다.
       </p>
 
       {needLogin ? (
@@ -116,14 +134,14 @@ export default function ImportPhoto() {
               </select>
             </label>
             <div className="text-sm">
-              <span className="mb-1 block text-slate-700">사진</span>
+              <span className="mb-1 block text-slate-700">파일</span>
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => fileInput.current?.click()}
                   className="rounded-md border border-slate-300 bg-paper px-3 py-2 hover:bg-slate-50"
                 >
-                  사진 고르기
+                  파일 고르기
                 </button>
                 <button
                   type="button"
@@ -133,13 +151,13 @@ export default function ImportPhoto() {
                   카메라로 찍기
                 </button>
                 <span className="truncate text-slate-600">
-                  {file ? file.name : "고른 사진 없음"}
+                  {file ? file.name : "고른 파일 없음"}
                 </span>
               </div>
               <input
                 ref={fileInput}
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                accept={ACCEPT}
                 className="sr-only"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
@@ -162,12 +180,12 @@ export default function ImportPhoto() {
               onChange={(e) => setConsent(e.target.checked)}
             />
             <span>
-              사진을 읽기 위해 NVIDIA 의 AI 서비스로 보냅니다. 무료 체험
+              파일을 읽기 위해 NVIDIA 의 AI 서비스로 보냅니다. 무료 체험
               서비스라 보낸 내용은 NVIDIA 의 약관에 따라 처리되니,{" "}
               <strong>
                 주민등록번호 등 꼭 필요하지 않은 개인정보는 가리고
               </strong>{" "}
-              올려 주세요. 사진은 바로 저장하지 않으며 읽은 뒤 버립니다.{" "}
+              올려 주세요. 파일은 저장하지 않으며 읽은 뒤 버립니다.{" "}
               <Link href="/privacy" className="underline">
                 개인정보처리방침
               </Link>

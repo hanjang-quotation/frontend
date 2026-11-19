@@ -8,10 +8,10 @@ import { errorMessages } from "@/lib/api/errors";
 import { saveDraft } from "@/lib/document/draft";
 import { formFromDocument } from "@/lib/document/form";
 import { industries } from "@/lib/preset/industries";
-import ImportPhoto from "./ImportPhoto";
+import ImportAi from "./ImportAi";
 
 // 새 견적서를 어떻게 시작할지 고르는 화면 (/documents/new, 업종을 고르기 전).
-// 직접 작성(업종 고르기), 엑셀 파일 열기(유료), 사진으로 가져오기(AI, 무료는 하루 1건).
+// 직접 작성(업종 고르기), 엑셀 파일 열기(유료), AI 로 가져오기(사진·PDF·엑셀·CSV, 무료는 하루 1건).
 
 type Mode = "write" | "excel" | "ai";
 
@@ -44,15 +44,15 @@ export default function StartMenu() {
         <ModeButton
           active={mode === "ai"}
           onClick={() => setMode("ai")}
-          title="사진으로 가져오기"
-          body="AI 가 사진을 읽어 채움"
+          title="AI 로 가져오기"
+          body="사진·PDF·엑셀을 읽어 채움"
         />
       </div>
 
       <div className="mt-6">
         {mode === "write" && <ChooseIndustry />}
         {mode === "excel" && <OpenExcel />}
-        {mode === "ai" && <ImportPhoto />}
+        {mode === "ai" && <ImportAi />}
       </div>
     </div>
   );
@@ -185,7 +185,8 @@ function OpenExcel() {
       <p className="mt-1 text-xs text-slate-500">
         거래처, 세금 방식, 공과잡비·기업이윤 비율은 내려받을 때의 값으로
         열립니다. 열린 뒤 작성 화면에서 확인하고 저장하세요. 다른 양식의 엑셀은
-        열 수 없습니다 (품목은 엑셀에서 복사해 붙여넣을 수 있습니다).
+        &ldquo;AI 로 가져오기&rdquo;로 읽을 수 있습니다 (품목은 엑셀에서 복사해
+        붙여넣을 수도 있습니다).
       </p>
       <input
         ref={input}

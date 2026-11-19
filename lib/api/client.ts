@@ -62,7 +62,7 @@ export interface AiQuota {
 /** AI 로 가져온 결과. document 는 저장하지 않은 문서(id 0) */
 export interface AiImportResult {
   document: DocumentResponse;
-  /** 사진에 적혀 있던 최종 합계 (못 읽었으면 null) */
+  /** 파일에 적혀 있던 최종 합계 (못 읽었으면 null) */
   printedTotal: number | null;
   remainingToday: number;
 }
@@ -213,16 +213,16 @@ export const api = {
     },
   },
 
-  /** AI 로 가져오기 (사진 → 저장하지 않은 견적서) */
+  /** AI 로 가져오기 (사진·PDF·엑셀·CSV → 저장하지 않은 견적서) */
   ai: {
     quota: () => apiFetch<AiQuota>("/ai/quota"),
-    importImage: (photo: Blob, presetCode: string) => {
+    importFile: (file: Blob, filename: string, presetCode: string) => {
       const body = new FormData();
-      body.append("file", photo, "photo.jpg");
+      body.append("file", file, filename);
       body.append("presetCode", presetCode);
       // 화면에서 동의를 받은 뒤에만 부른다
       body.append("consent", "true");
-      return apiFetch<AiImportResult>("/ai/import/image", {
+      return apiFetch<AiImportResult>("/ai/import/file", {
         method: "POST",
         body,
       });
