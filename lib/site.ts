@@ -19,7 +19,7 @@ export const SITE = {
    */
   aiImportOpen: true,
   /** 요금 (결제는 아직 없다. 요금제 화면 /pricing) */
-  price: { monthly: 6900, yearly: 59000 },
+  price: { monthly: 4900, yearly: 49000 },
   /** 운영자(개인정보 보호책임자) 이름. 사업자등록 전이라 개인 이름. 등록하면 상호와 대표자로 바꾼다 */
   operator: "김유빈",
   /** 문의·개인정보 관련 연락처. 네이버 무료 메일. 도메인을 사면 @ 뒤를 바꾼다 */
