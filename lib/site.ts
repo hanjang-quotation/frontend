@@ -5,7 +5,7 @@ export const SITE = {
   name: "바로 한장",
   /**
    * 사이트 주소 (끝에 / 없음). 검색엔진용 sitemap·robots 와 공유 미리보기에 쓴다.
-   * 도메인을 사면 Vercel 환경 변수 NEXT_PUBLIC_SITE_URL 을 새 주소로 바꾼다
+   * 기본값이 실제 주소다. 주소가 바뀌면 여기를 고치거나 Render 정적 사이트 환경 변수 NEXT_PUBLIC_SITE_URL 로 준다
    */
   url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://barohanjang.com").replace(
     /\/$/,

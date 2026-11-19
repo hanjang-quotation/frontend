@@ -3,8 +3,8 @@
 `app/opengraph-image.png`(1200×630), `app/icon1.png`(32), `app/icon2.png`(128), `app/apple-icon.png`(180),
 `assets/brand/app-icon-128.png`(카카오 앱 아이콘)은 이 폴더의 코드로 그린 그림이다.
 
-예전에는 이 코드가 `app/` 안에서 요청마다 그림을 그렸지만, Cloudflare Workers 에서는 실행 중에 글꼴 파일(`assets/og`)을
-읽을 수 없어서 2026-11-19 부터 미리 그린 PNG 를 쓴다.
+예전에는 이 코드가 `app/` 안에서 요청마다 그림을 그렸지만, 지금은 미리 만든 파일만 올리는 정적 사이트(Render Static Site)로
+배포하므로 2026-11-19 부터 미리 그린 PNG 를 쓴다.
 
 ## 다시 그리는 방법
 

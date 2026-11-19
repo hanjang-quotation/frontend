@@ -5,7 +5,7 @@ import { SITE } from "@/lib/site";
 export const metadata: Metadata = { title: "개인정보처리방침" };
 
 // 개인정보처리방침 초안 (개인정보 보호법 30조 항목). 출시 전에 운영자 정보(lib/site.ts)를 채우고 검토한다.
-// 실제 처리와 맞아야 한다: 수집 항목은 백엔드 users·business_profiles·clients·documents, 위탁·국외 이전은 Vercel·Render·Neon.
+// 실제 처리와 맞아야 한다: 수집 항목은 백엔드 users·business_profiles·clients·documents, 위탁·국외 이전은 Render(화면·서버)·Neon(DB)·Anthropic(AI).
 // 내용을 바꾸면 SITE.policyDate 와 백엔드 Agreements.VERSION 을 함께 올린다.
 export default function PrivacyPage() {
   return (
@@ -122,15 +122,9 @@ export default function PrivacyPage() {
           ]}
           rows={[
             [
-              "Vercel Inc. (privacy@vercel.com)",
-              "미국 등 (전 세계 네트워크)",
-              "화면 제공, 서버로 요청 전달",
-              "서비스 이용 중 주고받는 모든 정보",
-            ],
-            [
               "Render Inc. (privacy@render.com)",
-              "싱가포르",
-              "서버 운영",
+              "싱가포르 (서버), 전 세계 네트워크 (화면 전송)",
+              "화면 제공, 서버 운영, 서버로 요청 전달",
               "서비스 이용 중 주고받는 모든 정보",
             ],
             [
