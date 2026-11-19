@@ -17,7 +17,7 @@ export const SITE = {
    * AI 로 가져오기를 화면에서 열지. 서버도 따로 꺼 둔다 (Dockerfile 의 AI_IMPORT_ENABLED=false).
    * 유료 AI API 로 바꾼 뒤 둘 다 켠다
    */
-  aiImportOpen: false,
+  aiImportOpen: true,
   /** 요금 (결제는 아직 없다. 요금제 화면 /pricing) */
   price: { monthly: 6900, yearly: 59000 },
   /** 운영자(개인정보 보호책임자) 이름. 사업자등록 전이라 개인 이름. 등록하면 상호와 대표자로 바꾼다 */
