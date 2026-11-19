@@ -46,7 +46,8 @@ export default function WelcomeConsent() {
     <div className="mx-auto max-w-xl px-4 py-12">
       <h1 className="font-display text-3xl font-bold text-ink">반갑습니다</h1>
       <p className="mt-2 text-sm text-slate-600">
-        서비스를 쓰려면 아래 두 가지에 동의해 주세요.
+        서비스를 쓰려면 아래 두 가지에 동의해 주세요. 만 14세 이상만 가입할 수
+        있습니다.
       </p>
 
       <div className="mt-6 space-y-4 rounded-xl border border-rule bg-paper p-5 text-sm">

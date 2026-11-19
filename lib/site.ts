@@ -20,5 +20,5 @@ export const SITE = {
   /** 문의·개인정보 관련 연락처. 네이버 무료 메일. 도메인을 사면 @ 뒤를 바꾼다 */
   email: "hanjang-baro@hanjang-baro.by-works.net",
   /** 약관·개인정보처리방침 시행일. 백엔드 Agreements.VERSION 과 같아야 한다 */
-  policyDate: "2026-11-20",
+  policyDate: "2026-11-21",
 } as const;
