@@ -119,9 +119,19 @@ export async function apiFetch<T>(
       message: "요청을 처리하지 못했습니다.",
     };
     try {
-      body = (await res.json()) as ApiErrorBody;
+      const json = (await res.json()) as Partial<ApiErrorBody>;
+      // 우리 서버 모양이 아니거나(프록시·호스팅 오류) 문장이 비어 있으면 기본 메시지를 쓴다
+      if (json && typeof json.message === "string" && json.message) {
+        body = { ...body, ...json, message: json.message };
+      }
     } catch {
       // JSON 이 아닌 오류 응답은 기본 메시지를 쓴다
+    }
+    if (res.status === 504 || res.status === 502) {
+      body = {
+        code: "GATEWAY",
+        message: "서버가 응답하지 않습니다. 잠시 뒤에 다시 해 주세요.",
+      };
     }
     throw new ApiError(res.status, body);
   }
