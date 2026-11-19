@@ -131,8 +131,8 @@ export default function PrivacyPage() {
               "위 1번의 모든 항목",
             ],
             [
-              "Google LLC (Gemini API)",
-              "미국 등",
+              "NVIDIA Corporation (NVIDIA API)",
+              "미국",
               "사진으로 가져오기에서 사진을 AI 로 읽기 (회원이 사용할 때만)",
               "회원이 올린 사진",
             ],
@@ -143,10 +143,10 @@ export default function PrivacyPage() {
           있습니다. 이 경우 서비스를 이용할 수 없습니다.
         </p>
         <p>
-          사진으로 가져오기는 회원이 사진을 올리고 동의할 때만 Google 로
-          보냅니다. 지금 쓰는 Gemini 무료 등급에서는 Google 이 보낸 내용을 자사
-          서비스 개선에 쓸 수 있으므로, 꼭 필요하지 않은 개인정보는 가리고
-          올리도록 안내합니다. 이 기능을 쓰지 않으면 Google 로 보내지 않습니다.
+          사진으로 가져오기는 회원이 사진을 올리고 동의할 때만 NVIDIA 로
+          보냅니다. 지금 쓰는 무료 체험 서비스에서는 보낸 내용이 NVIDIA 의
+          약관에 따라 처리되므로, 꼭 필요하지 않은 개인정보는 가리고 올리도록
+          안내합니다. 이 기능을 쓰지 않으면 NVIDIA 로 보내지 않습니다.
         </p>
       </Article>
 

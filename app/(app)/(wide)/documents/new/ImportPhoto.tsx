@@ -12,7 +12,7 @@ import { shrinkPhoto } from "@/lib/image";
 import { industries } from "@/lib/preset/industries";
 
 /**
- * 사진으로 가져오기: 업종을 고르고 견적서 사진을 올리면 AI(Google Gemini)가 읽어
+ * 사진으로 가져오기: 업종을 고르고 견적서 사진을 올리면 AI(NVIDIA API)가 읽어
  * 저장하지 않은 견적서를 만든다. 임시 보관본(origin ai)으로 넣고 작성 화면을 연다. 사용자가 확인하고 저장한다.
  * 사진을 외부 AI 로 보내므로 동의를 받는다. 무료는 하루 1건 (서버가 센다)
  */
@@ -162,8 +162,8 @@ export default function ImportPhoto() {
               onChange={(e) => setConsent(e.target.checked)}
             />
             <span>
-              사진을 읽기 위해 Google 의 AI(Gemini)로 보냅니다. Google 이 보낸
-              내용을 서비스 개선에 쓸 수 있으니,{" "}
+              사진을 읽기 위해 NVIDIA 의 AI 서비스로 보냅니다. 무료 체험
+              서비스라 보낸 내용은 NVIDIA 의 약관에 따라 처리되니,{" "}
               <strong>
                 주민등록번호 등 꼭 필요하지 않은 개인정보는 가리고
               </strong>{" "}
