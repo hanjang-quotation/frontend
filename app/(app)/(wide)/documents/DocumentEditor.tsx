@@ -1,6 +1,7 @@
 "use client";
 
 import ProBadge from "@/components/ProBadge";
+import { documentPath } from "@/lib/paths";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -704,7 +705,7 @@ export default function DocumentEditor({
     setConverting(true);
     try {
       const created = await api.documents.convert(documentId, target);
-      router.push(`/documents/${created.id}?saved=1`);
+      router.push(documentPath(created.id, true));
     } catch (e) {
       clearStatusOnHide.current = true;
       setSave(saveError(e));
@@ -727,7 +728,7 @@ export default function DocumentEditor({
         // 수정 화면으로 넘어가서 저장 안내를 띄운다 (EditDocument 가 ?saved 를 읽는다)
         clearDraft();
         resetOnHide.current = true;
-        router.replace(`/documents/${created.id}?saved=1`);
+        router.replace(documentPath(created.id, true));
         return;
       }
       const updated = await api.documents.update(documentId, body);
@@ -770,7 +771,7 @@ export default function DocumentEditor({
             <span>
               원본{" "}
               <Link
-                href={`/documents/${source.id}`}
+                href={documentPath(source.id)}
                 className="text-pen underline-offset-2 hover:underline"
               >
                 {DOC_TYPE_LABELS[source.docType]}{" "}
@@ -785,7 +786,7 @@ export default function DocumentEditor({
                 <span key={d.id}>
                   {i > 0 && " · "}
                   <Link
-                    href={`/documents/${d.id}`}
+                    href={documentPath(d.id)}
                     className="text-pen underline-offset-2 hover:underline"
                   >
                     {DOC_TYPE_LABELS[d.docType]}{" "}

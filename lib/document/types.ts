@@ -149,7 +149,7 @@ export interface DocumentResponse {
   updatedAt: string;
 }
 
-/** 공유 링크. 주소는 /s/{token} */
+/** 공유 링크. 주소는 /s?t={token} (lib/paths.ts 의 sharePath) */
 export interface ShareInfo {
   token: string;
   sharedAt: string;

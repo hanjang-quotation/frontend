@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import BrandMark from "@/components/BrandMark";
 import DocumentPreview from "@/components/document/DocumentPreview";
@@ -19,7 +20,8 @@ type State =
   | { kind: "gone" }
   | { kind: "error" };
 
-export default function SharedView({ token }: { token: string }) {
+export default function SharedView() {
+  const token = useSearchParams().get("t") ?? "";
   const [state, setState] = useState<State>({ kind: "loading" });
 
   useEffect(() => {

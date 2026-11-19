@@ -3,6 +3,9 @@ import { industries } from "@/lib/preset/industries";
 import { SITE } from "@/lib/site";
 
 // 검색엔진에 알리는 공개 화면 목록. 업종을 추가하면 industries 에서 자동으로 들어간다
+// 정적 내보내기(STATIC_EXPORT=1)에서도 파일로 만들어지도록
+export const dynamic = "force-static";
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const page = (
     path: string,

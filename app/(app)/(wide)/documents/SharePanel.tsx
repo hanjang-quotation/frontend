@@ -1,5 +1,6 @@
 "use client";
 
+import { sharePath } from "@/lib/paths";
 import { useState } from "react";
 import { inputClass } from "@/components/form";
 import { api } from "@/lib/api/client";
@@ -27,7 +28,7 @@ export default function SharePanel({
   const [notice, setNotice] = useState<string | null>(null);
   const url =
     share && typeof window !== "undefined"
-      ? `${window.location.origin}/s/${share.token}`
+      ? `${window.location.origin}${sharePath(share.token)}`
       : "";
 
   async function run(action: () => Promise<void>) {

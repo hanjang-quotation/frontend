@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import SharedView from "./SharedView";
 
-// 공유 링크로 보는 견적서. 로그인 없이 열린다. 사이트 메뉴 없이 견적서만 보여 준다.
-// 주소(토큰)를 아는 사람만 볼 수 있으므로 검색에 올리지 않는다.
+// 공유 링크로 보는 견적서: /s?t=토큰 (lib/paths.ts 의 sharePath). 로그인 없이 열린다.
+// 사이트 메뉴 없이 견적서만 보여 준다. 주소(토큰)를 아는 사람만 볼 수 있으므로 검색에 올리지 않는다.
 export const metadata: Metadata = {
   title: "견적서",
   robots: { index: false, follow: false },
   referrer: "no-referrer",
 };
 
-export default function SharedPage({ params }: PageProps<"/s/[token]">) {
+export default function SharedPage() {
   return (
     <Suspense
       fallback={
@@ -19,9 +19,7 @@ export default function SharedPage({ params }: PageProps<"/s/[token]">) {
         </p>
       }
     >
-      {params.then(({ token }) => (
-        <SharedView token={token} />
-      ))}
+      <SharedView />
     </Suspense>
   );
 }

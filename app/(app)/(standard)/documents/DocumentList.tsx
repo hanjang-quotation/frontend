@@ -1,5 +1,6 @@
 "use client";
 
+import { documentPath } from "@/lib/paths";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ApiError, api } from "@/lib/api/client";
@@ -127,7 +128,7 @@ export default function DocumentList() {
             {state.data.items.map((doc) => (
               <li key={doc.id}>
                 <Link
-                  href={`/documents/${doc.id}`}
+                  href={documentPath(doc.id)}
                   className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-slate-50"
                 >
                   <div className="min-w-0 flex-1">
