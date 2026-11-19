@@ -38,6 +38,18 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  // 예전 Vercel 주소로 오면 새 도메인으로 영구 이동한다 (로그인 쿠키·콜백이 새 도메인 기준이라 한 주소만 쓴다).
+  // 미리보기 배포(다른 *.vercel.app 주소)는 그대로 둔다
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "frontend-gamma-six-74.vercel.app" }],
+        destination: "https://barohanjang.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
   // 브라우저는 항상 이 사이트의 /api/* 로만 요청한다.
   // Next.js가 그 요청을 백엔드로 넘겨 주므로 로그인 쿠키가 같은 사이트 쿠키로 취급된다.
   async rewrites() {

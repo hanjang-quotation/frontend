@@ -7,12 +7,17 @@ export const SITE = {
    * 사이트 주소 (끝에 / 없음). 검색엔진용 sitemap·robots 와 공유 미리보기에 쓴다.
    * 도메인을 사면 Vercel 환경 변수 NEXT_PUBLIC_SITE_URL 을 새 주소로 바꾼다
    */
-  url: (
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    "https://frontend-gamma-six-74.vercel.app"
-  ).replace(/\/$/, ""),
+  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://barohanjang.com").replace(
+    /\/$/,
+    "",
+  ),
   /** 무료 PDF·미리보기 아래 문구 (뒤에 사이트 주소가 붙는다). 백엔드 DocumentPdfService.BRAND_FOOTER 와 같아야 한다 */
   brandFooter: "바로 한장으로 작성했습니다",
+  /**
+   * AI 로 가져오기를 화면에서 열지. 서버도 따로 꺼 둔다 (Dockerfile 의 AI_IMPORT_ENABLED=false).
+   * 유료 AI API 로 바꾼 뒤 둘 다 켠다
+   */
+  aiImportOpen: false,
   /** 요금 (결제는 아직 없다. 요금제 화면 /pricing) */
   price: { monthly: 6900, yearly: 59000 },
   /** 운영자(개인정보 보호책임자) 이름. 사업자등록 전이라 개인 이름. 등록하면 상호와 대표자로 바꾼다 */

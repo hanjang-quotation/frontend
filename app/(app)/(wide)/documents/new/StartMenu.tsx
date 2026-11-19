@@ -9,6 +9,7 @@ import { saveDraft } from "@/lib/document/draft";
 import { formFromDocument } from "@/lib/document/form";
 import { industries } from "@/lib/preset/industries";
 import ProBadge from "@/components/ProBadge";
+import { SITE } from "@/lib/site";
 import ImportAi from "./ImportAi";
 
 // 새 견적서를 어떻게 시작할지 고르는 화면 (/documents/new, 업종을 고르기 전).
@@ -44,16 +45,21 @@ export default function StartMenu() {
         />
         <ModeButton
           active={mode === "ai"}
+          disabled={!SITE.aiImportOpen}
           onClick={() => setMode("ai")}
           title="AI 로 가져오기"
-          body="사진·PDF·엑셀을 읽어 채움 (무료 3회)"
+          body={
+            SITE.aiImportOpen
+              ? "사진·PDF·엑셀을 읽어 채움 (무료 3회)"
+              : "준비 중입니다"
+          }
         />
       </div>
 
       <div className="mt-6">
         {mode === "write" && <ChooseIndustry />}
         {mode === "excel" && <OpenExcel />}
-        {mode === "ai" && <ImportAi />}
+        {mode === "ai" && SITE.aiImportOpen && <ImportAi />}
       </div>
     </div>
   );

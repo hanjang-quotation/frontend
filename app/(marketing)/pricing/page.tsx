@@ -34,7 +34,7 @@ const ROWS: {
     pro: "없음",
   },
   {
-    feature: "AI 로 가져오기 (사진·PDF·엑셀 읽기)",
+    feature: `AI 로 가져오기 (사진·PDF·엑셀 읽기)${SITE.aiImportOpen ? "" : " — 준비 중"}`,
     free: "체험 3회",
     pro: "한 달 100회 (하루 20회)",
   },
