@@ -179,9 +179,17 @@ export default function ImportPhoto() {
             type="button"
             disabled={!file || !consent || busy || noneLeft || unavailable}
             onClick={run}
-            className="mt-4 rounded-md bg-pen px-4 py-2 text-sm font-medium text-white hover:bg-pen-deep disabled:opacity-60"
+            aria-busy={busy}
+            className="mt-4 inline-flex items-center gap-2 rounded-md bg-pen px-4 py-2 text-sm font-medium text-white hover:bg-pen-deep disabled:opacity-60"
           >
-            {busy ? "AI 가 읽는 중… (보통 10~30초)" : "AI 로 읽기"}
+            {busy && (
+              // 기다리는 동안 멈춘 화면이 아님을 알리는 도는 원. 움직임 줄이기 설정이면 천천히 돈다
+              <span
+                aria-hidden
+                className="size-4 shrink-0 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-[spin_2s_linear_infinite]"
+              />
+            )}
+            {busy ? "AI 가 읽는 중… (보통 10~60초)" : "AI 로 읽기"}
           </button>
           {noneLeft && (
             <p className="mt-2 text-sm text-slate-600">
