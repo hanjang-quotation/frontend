@@ -4,8 +4,9 @@ import type { NextConfig } from "next";
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Cache Components 는 끈다: Cloudflare Workers(OpenNext)에서 켜면 화면 그리기가 멈춘다
+  // ("Next.js cannot guarantee that Cache Components will run as expected due to the current runtime's implementation of setTimeout()")
+  cacheComponents: false,
   experimental: {
     // /api/* 를 백엔드로 넘길 때 기다리는 시간. 기본 30초는 AI 로 사진 읽기(보통 10~60초)에 모자란다.
     // 백엔드 NvidiaReader 가 전체를 100초 안쪽으로 끝내므로 그보다 길게 둔다

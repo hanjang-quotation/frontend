@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { BRAND, SealMark, gowunFonts } from "@/lib/og";
+import { BRAND, SealMark, gowunFonts } from "./og";
 
 // 브라우저 탭·북마크 아이콘: 로고의 "한장" 도장. 작은 크기에서도 보이게 종이 흰 바탕을 꽉 채운다.
 // 128 은 화질 좋은 화면용이자 카카오 앱 아이콘 원본(assets/brand/app-icon-128.png 와 같은 그림)

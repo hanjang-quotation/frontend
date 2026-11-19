@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { BRAND, SealMark as Seal, gowunFonts } from "@/lib/og";
+import { BRAND, SealMark as Seal, gowunFonts } from "./og";
 import { SITE } from "@/lib/site";
 
 // 링크를 붙였을 때(카톡·문자·SNS) 보이는 대표 이미지. 첫 화면처럼 책상 위 종이 한 장에 "한장" 도장을 찍었다.

@@ -1,0 +1,29 @@
+// Cloudflare Workers 설정 (프론트를 OpenNext 로 Cloudflare 에서 띄운다)
+// 빌드·배포: npm run deploy (Windows 에서는 빌드가 보장되지 않아 Cloudflare 의 GitHub 연결 빌드(Workers Builds)를 쓴다)
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	// 입구는 worker.ts (/api/* 를 백엔드로 직접 넘기고 나머지는 .open-next/worker.js)
+	"main": "worker.ts",
+	"name": "barohanjang",
+	"compatibility_date": "2026-11-01",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		{
+			// 자기 자신을 가리키는 연결 (OpenNext 가 쓴다). 이름은 위 name 과 같아야 한다
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "barohanjang"
+		}
+	],
+	// 백엔드 주소 (next.config.ts 의 rewrites 가 /api/* 를 여기로 넘긴다).
+	// 빌드할 때 읽히므로 Cloudflare 빌드 설정의 환경 변수에도 같은 값을 넣는다
+	"vars": {
+		"BACKEND_URL": "https://backend-ewn1.onrender.com"
+	},
+	"observability": {
+		"enabled": true
+	}
+}

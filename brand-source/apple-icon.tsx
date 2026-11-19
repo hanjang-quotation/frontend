@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { BRAND, SealMark, gowunFonts } from "@/lib/og";
+import { BRAND, SealMark, gowunFonts } from "./og";
 
 // 아이폰 홈 화면에 추가할 때의 아이콘 (iOS 가 모서리를 둥글게 깎는다)
 export const size = { width: 180, height: 180 };
