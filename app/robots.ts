@@ -13,7 +13,9 @@ export default function robots(): MetadataRoute.Robots {
       allow: ["/", "/documents/new"],
       disallow: [
         "/api/",
-        "/s",
+        // 공유 링크(/s?t=토큰)만 막는다. "/s" 로 쓰면 /sitemap.xml 처럼 s 로 시작하는 주소까지 막힌다
+        "/s$",
+        "/s?",
         "/documents/",
         "/settings/",
         "/welcome",
