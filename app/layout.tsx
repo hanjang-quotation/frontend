@@ -18,6 +18,8 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     siteName: SITE.name,
   },
+  // 대표 이미지는 app/opengraph-image.tsx. 트위터(X)도 큰 그림으로
+  twitter: { card: "summary_large_image" },
   title: {
     default: `${SITE.name} — 업종별 견적서`,
     template: `%s | ${SITE.name}`,
