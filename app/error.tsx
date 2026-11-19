@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
 
 // 화면을 그리다 생긴 오류. 메뉴 줄(SiteHeader)은 서버 부품이라 여기서 쓰지 않고 간단히 보여 준다.
-// 운영 환경에서는 오류 내용이 숨겨지므로 digest(서버 로그와 맞춰 볼 번호)만 보여 준다
+// 운영 환경에서는 오류 내용이 숨겨지므로 digest(서버 로그와 맞춰 볼 번호)만 보여 준다.
+// 브라우저 콘솔에는 남기지 않는다 (방문자 브라우저에만 찍혀 운영자가 볼 수 없다)
 export default function Error({
   error,
   retry,
@@ -12,10 +12,6 @@ export default function Error({
   error: unknown;
   retry: () => void;
 }) {
-  useEffect(() => {
-    console.error(error);
-  }, [error]);
-
   const digest =
     error instanceof Error && "digest" in error
       ? String((error as Error & { digest?: string }).digest ?? "")
