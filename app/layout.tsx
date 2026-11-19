@@ -20,6 +20,12 @@ export const metadata: Metadata = {
   },
   // 대표 이미지는 app/opengraph-image.tsx. 트위터(X)도 큰 그림으로
   twitter: { card: "summary_large_image" },
+  // 검색엔진 소유 확인 (네이버 서치어드바이저). 공개되는 값이라 코드에 둔다
+  verification: {
+    other: {
+      "naver-site-verification": "8f81aeaa984497f2192fd380186c5fc5639085a7",
+    },
+  },
   title: {
     default: `${SITE.name} — 업종별 견적서`,
     template: `%s | ${SITE.name}`,
