@@ -1,62 +1,18 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { ImageResponse } from "next/og";
+import { BRAND, SealMark as Seal, gowunFonts } from "@/lib/og";
 import { SITE } from "@/lib/site";
 
 // 링크를 붙였을 때(카톡·문자·SNS) 보이는 대표 이미지. 첫 화면처럼 책상 위 종이 한 장에 "한장" 도장을 찍었다.
-// 글꼴은 고운바탕에서 이 이미지에 쓰는 글자만 담은 파일(assets/og, SIL OFL 1.1).
+// 글꼴은 고운바탕에서 쓰는 글자만 담은 파일(lib/og.tsx, assets/og).
 // 글자를 바꾸면 새 글자가 빠져 보이지 않으므로 그 글자를 넣어 글꼴 파일을 다시 받는다 (Google Fonts css2 ?text=)
 
 export const alt = `${SITE.name} — 업종별 견적서·거래명세서를 한 장으로`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const DESK = "#eceff3";
-const PAPER = "#ffffff";
-const INK = "#1a2233";
-const PEN = "#2647b5";
-const SEAL = "#c9342b";
-const RULE = "#d3dae4";
-
-function Seal({
-  size,
-  font,
-  border,
-}: {
-  size: number;
-  font: number;
-  border: number;
-}) {
-  return (
-    <div
-      style={{
-        width: size,
-        height: size,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        border: `${border}px solid ${SEAL}`,
-        borderRadius: size / 18,
-        color: SEAL,
-        fontSize: font,
-        fontWeight: 700,
-        lineHeight: 1,
-      }}
-    >
-      <span>한</span>
-      <span>장</span>
-    </div>
-  );
-}
+const { desk: DESK, paper: PAPER, ink: INK, pen: PEN, rule: RULE } = BRAND;
 
 export default async function Image() {
-  const dir = join(process.cwd(), "assets/og");
-  const [regular, bold] = await Promise.all([
-    readFile(join(dir, "GowunBatang-Regular-subset.ttf")),
-    readFile(join(dir, "GowunBatang-Bold-subset.ttf")),
-  ]);
-
   return new ImageResponse(
     <div
       style={{
@@ -165,10 +121,7 @@ export default async function Image() {
     </div>,
     {
       ...size,
-      fonts: [
-        { name: "Gowun Batang", data: regular, weight: 400, style: "normal" },
-        { name: "Gowun Batang", data: bold, weight: 700, style: "normal" },
-      ],
+      fonts: await gowunFonts(),
     },
   );
 }
