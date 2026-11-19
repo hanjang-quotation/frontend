@@ -11,6 +11,13 @@ const gowun = Gowun_Batang({
 });
 
 export const metadata: Metadata = {
+  // 공유 미리보기·canonical 의 상대 주소를 이 주소 기준으로 만든다
+  metadataBase: new URL(SITE.url),
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    siteName: SITE.name,
+  },
   title: {
     default: `${SITE.name} — 업종별 견적서`,
     template: `%s | ${SITE.name}`,

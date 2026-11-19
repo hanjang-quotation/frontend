@@ -3,10 +3,18 @@
 
 export const SITE = {
   name: "바로 한장",
+  /**
+   * 사이트 주소 (끝에 / 없음). 검색엔진용 sitemap·robots 와 공유 미리보기에 쓴다.
+   * 도메인을 사면 Vercel 환경 변수 NEXT_PUBLIC_SITE_URL 을 새 주소로 바꾼다
+   */
+  url: (
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    "https://frontend-gamma-six-74.vercel.app"
+  ).replace(/\/$/, ""),
   /** 운영자(개인정보 보호책임자) 이름. 사업자등록 전이라 개인 이름. 등록하면 상호와 대표자로 바꾼다 */
   operator: "김유빈",
   /** 문의·개인정보 관련 연락처. 네이버 무료 메일. 도메인을 사면 @ 뒤를 바꾼다 */
   email: "hanjang-baro@hanjang-baro.by-works.net",
   /** 약관·개인정보처리방침 시행일. 백엔드 Agreements.VERSION 과 같아야 한다 */
-  policyDate: "2026-11-17",
+  policyDate: "2026-11-19",
 } as const;

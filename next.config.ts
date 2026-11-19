@@ -8,8 +8,27 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   experimental: {
     // /api/* 를 백엔드로 넘길 때 기다리는 시간. 기본 30초는 AI 로 사진 읽기(보통 10~60초)에 모자란다.
-    // 백엔드 GeminiReader 가 전체를 100초 안쪽으로 끝내므로 그보다 길게 둔다
+    // 백엔드 NvidiaReader 가 전체를 100초 안쪽으로 끝내므로 그보다 길게 둔다
     proxyTimeout: 120_000,
+  },
+  // 모든 화면에 붙이는 보안 머리. 다른 사이트가 우리 화면을 틀(iframe) 안에 넣지 못하게 하고,
+  // 파일 형식을 브라우저가 멋대로 짐작하지 않게 한다. 공유 링크(/s)는 화면에서 no-referrer 를 따로 정한다
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+        ],
+      },
+    ];
   },
   turbopack: {
     rules: {
