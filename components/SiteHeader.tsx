@@ -28,9 +28,6 @@ export default function SiteHeader({
           >
             양식
           </Link>
-          <Link href="/pricing" className="hidden hover:text-ink sm:inline">
-            요금제
-          </Link>
           <span aria-hidden className="hidden h-4 w-px bg-rule sm:block" />
           <Link href="/documents" className="hover:text-ink">
             내 문서

@@ -1,6 +1,5 @@
 "use client";
 
-import ProBadge from "@/components/ProBadge";
 import { documentPath } from "@/lib/paths";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -127,14 +126,6 @@ export default function DocumentEditor({
   const [pasteTarget, setPasteTarget] = useState<{
     groupId: number | null;
   } | null>(null);
-  /** 유료 기능을 쓸 수 있는지 (/api/me). 모르는 동안은 막지 않는다 (서버가 다시 확인한다) */
-  const [canUsePaid, setCanUsePaid] = useState<boolean | null>(null);
-  /** 무료 제한(결제 뒤에만): 이번 달 새 문서 저장 건수, PDF 아래 문구 (/api/me) */
-  const [plan, setPlan] = useState<{
-    freeLimits: boolean;
-    documentLimit: number | null;
-    documentsUsed: number | null;
-  } | null>(null);
 
   // 자주 쓰는 품목 (이 업종 것). 불러오지 못했으면(로그인 전 등) null 이고 버튼을 숨긴다
   const [savedItems, setSavedItems] = useState<SavedItem[] | null>(null);
@@ -255,21 +246,6 @@ export default function DocumentEditor({
     );
     api.clients.list().then(setClients, () => setClients([]));
     api.items.list(preset.code).then(setSavedItems, () => setSavedItems(null));
-    api.me().then(
-      (me) => {
-        setCanUsePaid(me?.canUsePaid ?? false);
-        setPlan(
-          me
-            ? {
-                freeLimits: me.freeLimits,
-                documentLimit: me.documentLimit,
-                documentsUsed: me.documentsUsed,
-              }
-            : null,
-        );
-      },
-      () => setCanUsePaid(false),
-    );
   }, [preset]);
 
   const totals = formTotals(form, preset);
@@ -664,21 +640,11 @@ export default function DocumentEditor({
   }
 
   /**
-   * 내려받기(PDF·엑셀) 전에 확인한다. 파일은 서버에 저장된 내용으로 만들어지므로 저장하지 않은 수정이 있으면 막고,
-   * 유료 기능인데 쓸 수 없으면 안내한다
+   * 내려받기(PDF·엑셀) 전에 확인한다. 파일은 서버에 저장된 내용으로 만들어지므로 저장하지 않은 수정이 있으면 막는다
    */
-  function guardDownload(
-    e: React.MouseEvent<HTMLAnchorElement>,
-    what: string,
-    paid = false,
-  ) {
-    let message: string | null = null;
-    if (paid && canUsePaid === false) {
-      message = `${what} 내려받기는 유료 요금제에서 쓸 수 있습니다.`;
-    } else if (dirty) {
-      message = `저장하지 않은 수정 내용이 있습니다. 저장한 뒤 ${what}${what === "엑셀" ? "을" : "를"} 내려받아 주세요.`;
-    }
-    if (!message) return;
+  function guardDownload(e: React.MouseEvent<HTMLAnchorElement>, what: string) {
+    if (!dirty) return;
+    const message = `저장하지 않은 수정 내용이 있습니다. 저장한 뒤 ${what}${what === "엑셀" ? "을" : "를"} 내려받아 주세요.`;
     e.preventDefault();
     clearStatusOnHide.current = true;
     setSave({ kind: "error", messages: [message] });
@@ -689,16 +655,14 @@ export default function DocumentEditor({
   async function convertTo(target: DocType) {
     setConvertOpen(false);
     if (documentId === undefined) return;
-    let message: string | null = null;
-    if (canUsePaid === false) {
-      message = "문서 변환은 유료 요금제에서 쓸 수 있습니다.";
-    } else if (dirty) {
-      message =
-        "저장하지 않은 수정 내용이 있습니다. 저장한 뒤 문서를 변환해 주세요.";
-    }
-    if (message) {
+    if (dirty) {
       clearStatusOnHide.current = true;
-      setSave({ kind: "error", messages: [message] });
+      setSave({
+        kind: "error",
+        messages: [
+          "저장하지 않은 수정 내용이 있습니다. 저장한 뒤 문서를 변환해 주세요.",
+        ],
+      });
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -807,22 +771,6 @@ export default function DocumentEditor({
           )}
         </div>
         <div className="flex items-center gap-3">
-          {/* 무료 요금제의 새 문서 저장 건수 (결제를 붙인 뒤에만 나온다). 이미 저장한 문서를 고치는 것은 세지 않는다 */}
-          {documentId === undefined &&
-            plan?.documentLimit != null &&
-            plan.documentsUsed != null && (
-              <Link
-                href="/pricing"
-                className="text-xs text-slate-500 hover:text-pen"
-                title="PRO 요금제는 저장 건수 제한이 없습니다"
-              >
-                이번 달 무료 저장{" "}
-                <span className="tabular-nums">
-                  {plan.documentsUsed}/{plan.documentLimit}
-                </span>
-                건
-              </Link>
-            )}
           <button
             type="button"
             onClick={handleSave}
@@ -1271,16 +1219,14 @@ export default function DocumentEditor({
                   >
                     PDF 내려받기
                   </a>
-                  {/* 엑셀은 유료 기능. 결제 전에는 모두에게 열려 있고(canUsePaid), 잠기면 안내만 한다 */}
                   <a
                     href={`/api/documents/${documentId}/xlsx`}
-                    onClick={(e) => guardDownload(e, "엑셀", true)}
+                    onClick={(e) => guardDownload(e, "엑셀")}
                     className="rounded-md border border-slate-300 bg-paper px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
                   >
                     엑셀 내려받기
-                    <ProBadge />
                   </a>
-                  {/* 문서 변환 (유료): 원본은 두고 거래명세서·청구서를 새로 만든다 */}
+                  {/* 문서 변환: 원본은 두고 거래명세서·청구서를 새로 만든다 */}
                   <div className="relative">
                     <button
                       type="button"
@@ -1290,7 +1236,6 @@ export default function DocumentEditor({
                       className="rounded-md border border-slate-300 bg-paper px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                     >
                       {converting ? "만드는 중…" : "문서 변환"}
-                      <ProBadge />
                     </button>
                     {convertOpen && (
                       <div className="absolute right-0 z-10 mt-1 w-48 rounded-md border border-rule bg-paper py-1 shadow-md">
@@ -1347,7 +1292,6 @@ export default function DocumentEditor({
               supplier={supplier}
               supplierFields={supplierFields}
               docType={docType}
-              freeLimits={plan?.freeLimits ?? false}
             />
           </div>
         </div>

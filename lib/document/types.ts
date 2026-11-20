@@ -170,10 +170,7 @@ export type SharedDocument = Omit<
   | "derived"
   | "createdAt"
   | "updatedAt"
-> & {
-  /** 문서 주인에게 무료 제한이 걸리는지. true 면 PDF 처럼 아래 문구를 보이고 로고를 뺀다 (공유 링크 응답에만 있다) */
-  freeLimits?: boolean;
-};
+>;
 
 /** 목록의 한 줄 */
 export interface DocumentSummary {

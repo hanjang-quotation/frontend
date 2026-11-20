@@ -113,27 +113,12 @@ export default function ImportAi() {
         <>
           {quota && (
             <p className="mt-2 text-xs text-slate-500">
-              {quota.period === "TOTAL" ? (
-                <>
-                  무료 체험 남은 횟수{" "}
-                  <span className="tabular-nums">
-                    {quota.remaining}/{quota.limit}
-                  </span>
-                  회 ·{" "}
-                  <Link href="/pricing" className="underline hover:text-pen">
-                    PRO 는 한 달 100회
-                  </Link>
-                </>
-              ) : (
-                <>
-                  이번 달 남은 횟수{" "}
-                  <span className="tabular-nums">
-                    {Math.max(0, quota.limit - quota.used)}/{quota.limit}
-                  </span>
-                  회 (오늘 최대 {quota.dailyLimit}회, 오늘{" "}
-                  <span className="tabular-nums">{quota.usedToday}</span>회 씀)
-                </>
-              )}
+              이번 달 남은 횟수{" "}
+              <span className="tabular-nums">
+                {Math.max(0, quota.limit - quota.used)}/{quota.limit}
+              </span>
+              회 (오늘 최대 {quota.dailyLimit}회, 오늘{" "}
+              <span className="tabular-nums">{quota.usedToday}</span>회 씀)
             </p>
           )}
 
@@ -230,19 +215,9 @@ export default function ImportAi() {
           </button>
           {noneLeft && quota && (
             <p className="mt-2 text-sm text-slate-600">
-              {quota.period === "TOTAL" ? (
-                <>
-                  무료 체험을 모두 썼습니다.{" "}
-                  <Link href="/pricing" className="text-pen underline">
-                    PRO 요금제
-                  </Link>
-                  는 한 달 100회까지 쓸 수 있습니다.
-                </>
-              ) : quota.used >= quota.limit ? (
-                "이번 달 횟수를 모두 썼습니다. 다음 달 1일부터 다시 쓸 수 있습니다."
-              ) : (
-                "오늘 쓸 수 있는 횟수를 모두 썼습니다. 내일 다시 쓸 수 있습니다."
-              )}
+              {quota.used >= quota.limit
+                ? "이번 달 횟수를 모두 썼습니다. 다음 달 1일부터 다시 쓸 수 있습니다."
+                : "오늘 쓸 수 있는 횟수를 모두 썼습니다. 내일 다시 쓸 수 있습니다."}
             </p>
           )}
           {unavailable && (

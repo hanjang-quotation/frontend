@@ -11,15 +11,11 @@ export const SITE = {
     /\/$/,
     "",
   ),
-  /** 무료 PDF·미리보기 아래 문구 (뒤에 사이트 주소가 붙는다). 백엔드 DocumentPdfService.BRAND_FOOTER 와 같아야 한다 */
-  brandFooter: "바로 한장으로 작성했습니다",
   /**
    * AI 로 가져오기를 화면에서 열지. 서버도 따로 꺼 둔다 (Dockerfile 의 AI_IMPORT_ENABLED=false).
    * 유료 AI API 로 바꾼 뒤 둘 다 켠다
    */
   aiImportOpen: true,
-  /** 요금 (결제는 아직 없다. 요금제 화면 /pricing) */
-  price: { monthly: 4900, yearly: 49000 },
   /** 운영자(개인정보 보호책임자) 이름. 사업자등록 전이라 개인 이름. 등록하면 상호와 대표자로 바꾼다 */
   operator: "김유빈",
   /** 문의·개인정보 관련 연락처. Cloudflare Email Routing 으로 받아 개인 메일로 넘긴다 (받기 전용, 2026-11-20) */

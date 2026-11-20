@@ -3,15 +3,13 @@
 /* eslint-disable @next/next/no-img-element -- 로그인한 본인 이미지(/api/images)를 그대로 보여 준다 */
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import ProBadge from "@/components/ProBadge";
 import { inputClass } from "@/components/form";
 import { api } from "@/lib/api/client";
 import { errorMessages } from "@/lib/api/errors";
 import { drawStamp, imageUrl, shrinkImage, type ImageKind } from "@/lib/image";
 
 /**
- * 내 정보의 로고(유료 기능)·도장(무료). 올리면 바로 서버에 저장하고 id 를 내 정보 값에 넣는다
+ * 내 정보의 로고·도장. 올리면 바로 서버에 저장하고 id 를 내 정보 값에 넣는다
  * (내 정보를 저장해야 문서에 쓰인다). 도장은 이미지를 올리거나 이름으로 만들 수 있다
  */
 export default function BrandImages({
@@ -29,14 +27,6 @@ export default function BrandImages({
     stampImageId?: number | null;
   }) => void;
 }) {
-  const [canUsePaid, setCanUsePaid] = useState<boolean | null>(null);
-  useEffect(() => {
-    api.me().then(
-      (me) => setCanUsePaid(me?.canUsePaid ?? false),
-      () => setCanUsePaid(false),
-    );
-  }, []);
-
   return (
     <fieldset className="rounded-lg border border-rule p-4">
       <legend className="px-1 text-sm font-semibold text-ink">로고·도장</legend>
@@ -45,29 +35,12 @@ export default function BrandImages({
         나옵니다. 바꿔도 이미 저장한 문서는 그대로입니다.
       </p>
       <div className="mt-3 grid gap-4 sm:grid-cols-2">
-        {canUsePaid === false ? (
-          <div className="text-sm">
-            <p className="flex items-center font-medium text-ink">
-              로고
-              <ProBadge />
-            </p>
-            <p className="mt-2 text-slate-600">
-              로고는{" "}
-              <Link href="/pricing" className="text-pen underline">
-                PRO 요금제
-              </Link>
-              에서 넣을 수 있습니다.
-            </p>
-          </div>
-        ) : (
-          <ImageSlot
-            kind="LOGO"
-            label="로고"
-            pro
-            imageId={logoImageId}
-            onChange={(id) => onChange({ logoImageId: id })}
-          />
-        )}
+        <ImageSlot
+          kind="LOGO"
+          label="로고"
+          imageId={logoImageId}
+          onChange={(id) => onChange({ logoImageId: id })}
+        />
         <div>
           <ImageSlot
             kind="STAMP"
@@ -89,14 +62,11 @@ export default function BrandImages({
 function ImageSlot({
   kind,
   label,
-  pro = false,
   imageId,
   onChange,
 }: {
   kind: ImageKind;
   label: string;
-  /** 유료 기능 표시 (로고) */
-  pro?: boolean;
   imageId: number | null;
   onChange: (id: number | null) => void;
 }) {
@@ -125,10 +95,7 @@ function ImageSlot({
 
   return (
     <div>
-      <p className="flex items-center text-sm text-slate-700">
-        {label}
-        {pro && <ProBadge />}
-      </p>
+      <p className="flex items-center text-sm text-slate-700">{label}</p>
       <div
         className={`mt-1 flex items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 ${
           kind === "LOGO" ? "h-20" : "h-24 w-24"

@@ -44,26 +44,18 @@ export interface Me {
   email: string | null;
   name: string | null;
   provider: "KAKAO" | "GOOGLE";
-  plan: string;
   /** 지금 버전의 이용약관·개인정보 수집·이용에 동의했는지. false 면 동의 화면(/welcome)으로 보낸다 */
   agreed: boolean;
-  /** 유료 기능(엑셀·문서 변환·로고·사진)을 쓸 수 있는지. 결제를 붙이기 전에는 모두에게 열려 있다 */
-  canUsePaid: boolean;
-  /** 무료 제한(문서 월 저장 건수, PDF 아래 문구)이 걸리는지. 결제를 붙이기 전에는 false */
-  freeLimits: boolean;
-  /** 이번 달 새 문서 저장 한도와 쓴 수 (제한이 없으면 null) */
-  documentLimit: number | null;
-  documentsUsed: number | null;
 }
 
 /** 오늘 AI 로 가져오기 한도. available 이 false 면 서버에 AI 설정이 없다 */
 export interface AiQuota {
   available: boolean;
-  /** limit·used 를 센 기간: TOTAL(무료 체험, 가입 후 전부), MONTH(PRO, 이번 달) */
-  period: "TOTAL" | "MONTH";
+  /** limit·used 를 센 기간: 이번 달 */
+  period: "MONTH";
   limit: number;
   used: number;
-  /** 지금 더 쓸 수 있는 수 (PRO 는 하루 상한도 반영) */
+  /** 지금 더 쓸 수 있는 수 (하루 상한도 반영) */
   remaining: number;
   /** 하루 상한 (0 이면 따로 없음) */
   dailyLimit: number;
@@ -224,7 +216,7 @@ export const api = {
       apiFetch<void>(`/clients/${id}`, { method: "DELETE" }),
   },
 
-  /** 로고·도장 이미지 올리기 (유료 기능). 줄인 이미지를 보낸다 (lib/image.ts 의 shrinkImage) */
+  /** 로고·도장 이미지 올리기. 줄인 이미지를 보낸다 (lib/image.ts 의 shrinkImage) */
   images: {
     upload: (image: Blob, kind: ImageKind) => {
       const body = new FormData();
@@ -302,7 +294,7 @@ export const api = {
     remove: (id: number) =>
       apiFetch<void>(`/documents/${id}`, { method: "DELETE" }),
     /**
-     * 바로 한장에서 내려받은 엑셀을 다시 연다 (유료 기능). 저장하지 않은 문서(id 0)를 돌려준다
+     * 바로 한장에서 내려받은 엑셀을 다시 연다. 저장하지 않은 문서(id 0)를 돌려준다
      */
     importXlsx: (file: File) => {
       const body = new FormData();
@@ -312,7 +304,7 @@ export const api = {
         body,
       });
     },
-    /** 문서 변환 (유료 기능): 원본은 두고 거래명세서·청구서를 새로 만든다 */
+    /** 문서 변환: 원본은 두고 거래명세서·청구서를 새로 만든다 */
     convert: (id: number, docType: DocType) =>
       apiFetch<DocumentResponse>(`/documents/${id}/convert`, {
         method: "POST",

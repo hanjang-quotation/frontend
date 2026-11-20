@@ -9,9 +9,6 @@ export default function SiteFooter() {
         <Link href="/templates/estimate" className="hover:text-slate-800">
           양식 받기
         </Link>
-        <Link href="/pricing" className="hover:text-slate-800">
-          요금제
-        </Link>
         <Link href="/terms" className="hover:text-slate-800">
           이용약관
         </Link>
