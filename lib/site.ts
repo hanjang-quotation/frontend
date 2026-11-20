@@ -22,8 +22,8 @@ export const SITE = {
   price: { monthly: 4900, yearly: 49000 },
   /** 운영자(개인정보 보호책임자) 이름. 사업자등록 전이라 개인 이름. 등록하면 상호와 대표자로 바꾼다 */
   operator: "김유빈",
-  /** 문의·개인정보 관련 연락처. 네이버 무료 메일. 도메인을 사면 @ 뒤를 바꾼다 */
-  email: "hanjang-baro@hanjang-baro.by-works.net",
+  /** 문의·개인정보 관련 연락처. Cloudflare Email Routing 으로 받아 개인 메일로 넘긴다 (받기 전용, 2026-11-20) */
+  email: "help@barohanjang.com",
   /** 약관·개인정보처리방침 시행일. 백엔드 Agreements.VERSION 과 같아야 한다 */
   policyDate: "2026-11-21",
 } as const;
