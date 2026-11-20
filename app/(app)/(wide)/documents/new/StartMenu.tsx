@@ -8,12 +8,11 @@ import { errorMessages } from "@/lib/api/errors";
 import { saveDraft } from "@/lib/document/draft";
 import { formFromDocument } from "@/lib/document/form";
 import { industries } from "@/lib/preset/industries";
-import ProBadge from "@/components/ProBadge";
 import { SITE } from "@/lib/site";
 import ImportAi from "./ImportAi";
 
 // 새 견적서를 어떻게 시작할지 고르는 화면 (/documents/new, 업종을 고르기 전).
-// 직접 작성(업종 고르기), 엑셀 파일 열기(유료), AI 로 가져오기(사진·PDF·엑셀·CSV, 무료는 하루 1건).
+// 직접 작성(업종 고르기), 바로 한장 엑셀 양식 열기(무료, 우리 양식·우리가 내보낸 엑셀만), AI 로 가져오기(다른 파일)(사진·PDF·엑셀·CSV, 무료는 하루 1건).
 
 type Mode = "write" | "excel" | "ai";
 
@@ -39,9 +38,8 @@ export default function StartMenu() {
         <ModeButton
           active={mode === "excel"}
           onClick={() => setMode("excel")}
-          title="엑셀 파일 열기"
-          body="내려받은 엑셀을 다시"
-          pro
+          title="바로 한장 양식 열기"
+          body="여기서 받은 양식"
         />
         <ModeButton
           active={mode === "ai"}
@@ -71,14 +69,12 @@ function ModeButton({
   onClick,
   title,
   body,
-  pro = false,
 }: {
   active: boolean;
   disabled?: boolean;
   onClick: () => void;
   title: string;
   body: string;
-  pro?: boolean;
 }) {
   return (
     <button
@@ -96,7 +92,6 @@ function ModeButton({
     >
       <span className="flex items-center gap-1.5 text-sm font-semibold text-ink">
         {title}
-        {pro && <ProBadge className="" />}
       </span>
       <span className="mt-0.5 block text-xs text-slate-500">{body}</span>
     </button>
@@ -140,7 +135,7 @@ function ChooseIndustry() {
 }
 
 /**
- * 엑셀 파일 열기. 서버가 읽어 저장하지 않은 견적서로 돌려주면 임시 보관본으로 넣고 작성 화면을 연다.
+ * 바로 한장 엑셀 양식 열기 (무료). 서버가 읽어 저장하지 않은 견적서로 돌려주면 임시 보관본으로 넣고 작성 화면을 연다.
  * 사용자가 확인하고 저장한다 (바로 저장하지 않는다)
  */
 function OpenExcel() {
@@ -182,8 +177,7 @@ function OpenExcel() {
         <Link href="/templates/estimate" className="text-pen underline">
           양식 페이지
         </Link>
-        에서 받은 엑셀 양식을 올리면 견적서로 열립니다. 양식에서 받은 엑셀은
-        무료입니다. 엑셀에서 고친{" "}
+        에서 받은 엑셀 양식을 올리면 견적서로 열립니다. 엑셀에서 고친{" "}
         <strong>
           건명, 품목(이름·규격·수량·단가, 줄 추가·삭제), 조건, 비고
         </strong>
@@ -191,9 +185,9 @@ function OpenExcel() {
       </p>
       <p className="mt-1 text-xs text-slate-500">
         거래처, 세금 방식, 공과잡비·기업이윤 비율은 내려받을 때의 값으로
-        열립니다. 열린 뒤 작성 화면에서 확인하고 저장하세요. 다른 양식의 엑셀은
-        &ldquo;AI 로 가져오기&rdquo;로 읽을 수 있습니다 (품목은 엑셀에서 복사해
-        붙여넣을 수도 있습니다).
+        열립니다. 열린 뒤 작성 화면에서 확인하고 저장하세요. 다른 곳에서 만든
+        엑셀·PDF·사진은 &ldquo;AI 로 가져오기&rdquo;로 읽을 수 있습니다 (품목은
+        엑셀에서 복사해 붙여넣을 수도 있습니다).
       </p>
       <input
         ref={input}

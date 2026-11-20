@@ -38,7 +38,8 @@ const ROWS: {
     free: "체험 3회",
     pro: "한 달 100회 (하루 20회)",
   },
-  { feature: "엑셀 내려받기·다시 열기", free: "—", pro: "○", proOnly: true },
+  { feature: "바로 한장 엑셀 양식 열기", free: "○", pro: "○" },
+  { feature: "엑셀 내려받기", free: "—", pro: "○", proOnly: true },
   {
     feature: "문서 변환 (견적서 → 거래명세서·청구서)",
     free: "—",

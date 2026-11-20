@@ -75,9 +75,9 @@ export default function TemplateLanding({
             href="/documents/new"
             className="text-pen underline-offset-4 hover:underline"
           >
-            엑셀 파일 열기
+            바로 한장 엑셀 양식 열기
           </Link>
-          . 양식에서 받은 엑셀은 무료로 열립니다.
+          . 무료로 열립니다.
         </p>
       </section>
 
