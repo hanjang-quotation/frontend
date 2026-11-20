@@ -178,8 +178,12 @@ function OpenExcel() {
   return (
     <div className="rounded-xl border border-rule bg-paper p-5">
       <p className="text-sm text-slate-700">
-        바로 한장에서 내려받은 엑셀(.xlsx)을 올리면 견적서로 열립니다. 엑셀에서
-        고친{" "}
+        바로 한장에서 내려받은 엑셀(.xlsx)이나{" "}
+        <Link href="/templates/estimate" className="text-pen underline">
+          양식 페이지
+        </Link>
+        에서 받은 엑셀 양식을 올리면 견적서로 열립니다. 양식에서 받은 엑셀은
+        무료입니다. 엑셀에서 고친{" "}
         <strong>
           건명, 품목(이름·규격·수량·단가, 줄 추가·삭제), 조건, 비고
         </strong>

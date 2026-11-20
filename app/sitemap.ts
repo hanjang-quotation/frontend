@@ -20,6 +20,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...industries.filter((i) => i.ready).map((i) => page(`/${i.code}`, 0.8)),
     page("/documents/new", 0.6),
     page("/pricing", 0.5),
+    page("/templates/estimate", 0.8),
+    page("/templates/statement", 0.7),
+    page("/templates/invoice", 0.7),
     page("/terms", 0.2),
     page("/privacy", 0.2),
   ];

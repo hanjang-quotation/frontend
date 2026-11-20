@@ -6,6 +6,9 @@ export default function SiteFooter() {
   return (
     <footer className="border-t border-rule py-6 text-center text-xs text-slate-500">
       <nav className="flex justify-center gap-4">
+        <Link href="/templates/estimate" className="hover:text-slate-800">
+          양식 받기
+        </Link>
         <Link href="/pricing" className="hover:text-slate-800">
           요금제
         </Link>

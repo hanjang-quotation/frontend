@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { estimateTemplatePath } from "@/lib/templates";
 import DocumentPreview from "@/components/document/DocumentPreview";
 import { formTotals } from "@/lib/document/form";
 import { eventPreset } from "@/lib/preset/event";
@@ -51,6 +52,15 @@ export default function EventLandingPage() {
           저장하거나 PDF로 받을 때만 카카오·구글로 로그인합니다.
         </span>
       </div>
+      <p className="mt-4 text-sm text-slate-600">
+        엑셀로 쓰는 게 편하다면{" "}
+        <Link
+          href={estimateTemplatePath("event")}
+          className="font-medium text-pen underline-offset-4 hover:underline"
+        >
+          이 업종 엑셀 양식 받기
+        </Link>
+      </p>
 
       <section className="mt-12">
         <h2 className="font-semibold text-ink">이렇게 만들어집니다</h2>

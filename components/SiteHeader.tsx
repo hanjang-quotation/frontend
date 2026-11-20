@@ -20,7 +20,18 @@ export default function SiteHeader({
         <Link href="/" aria-label={`${SITE.name} 처음으로`}>
           <BrandMark />
         </Link>
+        {/* 왼쪽은 누구나 보는 메뉴, 세로선 오른쪽은 내 자료 메뉴와 로그인 */}
         <nav className="flex items-center gap-4 text-sm text-slate-600">
+          <Link
+            href="/templates/estimate"
+            className="hidden hover:text-ink sm:inline"
+          >
+            양식
+          </Link>
+          <Link href="/pricing" className="hidden hover:text-ink sm:inline">
+            요금제
+          </Link>
+          <span aria-hidden className="hidden h-4 w-px bg-rule sm:block" />
           <Link href="/documents" className="hover:text-ink">
             내 문서
           </Link>
@@ -41,9 +52,6 @@ export default function SiteHeader({
             className="hidden hover:text-ink md:inline"
           >
             내 정보
-          </Link>
-          <Link href="/pricing" className="hidden hover:text-ink sm:inline">
-            요금제
           </Link>
           <AuthMenu />
         </nav>

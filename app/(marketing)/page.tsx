@@ -8,6 +8,8 @@ import {
   freelancerSampleSupplier,
 } from "@/lib/preset/freelancerSample";
 import { industries } from "@/lib/preset/industries";
+import ArrowRight from "@/components/template/ArrowRight";
+import { estimateTemplatePath, TEMPLATE_PAGE_LIST } from "@/lib/templates";
 
 // 첫 화면. 책상(desk) 위에 견적서 한 장을 놓고, 페이지가 열리면 도장이 한 번 찍힌다 (globals.css .stamp-in).
 // 그 아래는 업종별 양식 목록. 준비된 업종만 바로 쓸 수 있다.
@@ -31,6 +33,13 @@ export default function HomePage() {
               className="rounded-md bg-pen px-5 py-3 font-medium text-white hover:bg-pen-deep"
             >
               견적서 쓰기
+            </Link>
+            <Link
+              href="/templates/estimate"
+              className="inline-flex items-center gap-1 text-sm font-medium text-slate-600 underline decoration-rule underline-offset-4 hover:text-ink hover:decoration-slate-400"
+            >
+              엑셀 양식 받기
+              <ArrowRight />
             </Link>
           </div>
           <p className="mt-4 text-sm text-slate-500">
@@ -82,17 +91,56 @@ export default function HomePage() {
                 </p>
               </div>
               {industry.ready ? (
-                <Link
-                  href={`/${industry.code}`}
-                  className="text-sm font-medium text-pen hover:text-pen-deep sm:justify-self-end"
-                >
-                  양식 보기
-                </Link>
+                <p className="flex items-center gap-2 text-sm sm:justify-self-end">
+                  <Link
+                    href={`/${industry.code}`}
+                    className="font-medium text-pen hover:text-pen-deep"
+                  >
+                    예시 보기
+                  </Link>
+                  <span aria-hidden className="text-slate-300">
+                    ·
+                  </span>
+                  <Link
+                    href={estimateTemplatePath(industry.code)}
+                    className="font-medium text-pen hover:text-pen-deep"
+                  >
+                    엑셀 양식
+                  </Link>
+                </p>
               ) : (
                 <span className="text-xs text-slate-400 sm:justify-self-end">
                   준비 중
                 </span>
               )}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* 빈 양식 받기: 거래명세서·청구서 양식은 첫 화면에서 여기로 간다 */}
+      <section className="pb-20">
+        <h2 className="font-display text-2xl font-bold text-ink">
+          빈 양식 받기
+        </h2>
+        <p className="mt-1 text-sm text-slate-500">
+          엑셀로 쓰다가 올리면 한 장으로 정리됩니다. 로그인 없이 받습니다.
+        </p>
+        <ul className="mt-6 divide-y divide-rule border-y border-rule">
+          {TEMPLATE_PAGE_LIST.map((t) => (
+            <li key={t.key}>
+              <Link
+                href={`/templates/${t.key}`}
+                className="group grid grid-cols-[1fr_auto] items-center gap-x-6 gap-y-1 py-5 sm:grid-cols-[160px_1fr_auto]"
+              >
+                <span className="font-semibold text-ink group-hover:text-pen">
+                  {t.name} 양식
+                </span>
+                <span className="col-start-1 text-sm text-slate-600 sm:col-start-2 sm:row-start-1">
+                  {t.summary}
+                </span>
+                <ArrowRight className="col-start-2 row-span-2 row-start-1 size-4 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-pen motion-reduce:transition-none sm:col-start-3 sm:row-span-1" />
+              </Link>
             </li>
           ))}
         </ul>
